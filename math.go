@@ -1,0 +1,149 @@
+package filter
+
+import (
+	"errors"
+	"math"
+)
+
+var (
+	ErrDivisionByZero = errors.New("division by zero")
+	ErrModulusByZero  = errors.New("modulus by zero")
+)
+
+// Abs calculates the absolute value of the input.
+func Abs(input interface{}) (float64, error) {
+	val, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	return math.Abs(val), nil
+}
+
+// AtLeast ensures the input is at least as large as the min value.
+func AtLeast(input interface{}, min interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	minVal, err := toFloat64(min)
+	if err != nil {
+		return 0, err
+	}
+	return math.Max(inputVal, minVal), nil
+}
+
+// AtMost ensures the input is no larger than the max value.
+func AtMost(input interface{}, max interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	maxVal, err := toFloat64(max)
+	if err != nil {
+		return 0, err
+	}
+	return math.Min(inputVal, maxVal), nil
+}
+
+// Round rounds the input to the specified number of decimal places.
+func Round(input interface{}, precision interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	precisionVal, err := toFloat64(precision)
+	if err != nil {
+		return 0, err
+	}
+	multiplier := math.Pow(10, precisionVal)
+	return math.Round(inputVal*multiplier) / multiplier, nil
+}
+
+// Floor rounds the input down to the nearest whole number.
+func Floor(input interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	return math.Floor(inputVal), nil
+}
+
+// Ceil rounds the input up to the nearest whole number.
+func Ceil(input interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	return math.Ceil(inputVal), nil
+}
+
+// Plus adds two numbers.
+func Plus(input interface{}, addend interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	addendVal, err := toFloat64(addend)
+	if err != nil {
+		return 0, err
+	}
+	return inputVal + addendVal, nil
+}
+
+// Minus subtracts the second value from the first.
+func Minus(input interface{}, subtrahend interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	subtrahendVal, err := toFloat64(subtrahend)
+	if err != nil {
+		return 0, err
+	}
+	return inputVal - subtrahendVal, nil
+}
+
+// Times multiplies the first value by the second.
+func Times(input interface{}, multiplier interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	multiplierVal, err := toFloat64(multiplier)
+	if err != nil {
+		return 0, err
+	}
+	return inputVal * multiplierVal, nil
+}
+
+// Divided divides the first value by the second, including error handling for division by zero.
+func Divide(input interface{}, divisor interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	divisorVal, err := toFloat64(divisor)
+	if err != nil {
+		return 0, err
+	}
+	if divisorVal == 0 {
+		return 0, ErrDivisionByZero
+	}
+	return inputVal / divisorVal, nil
+}
+
+// Modulo returns the remainder of the division of the first value by the second.
+func Modulo(input interface{}, modulus interface{}) (float64, error) {
+	inputVal, err := toFloat64(input)
+	if err != nil {
+		return 0, err
+	}
+	modulusVal, err := toFloat64(modulus)
+	if err != nil {
+		return 0, err
+	}
+	if modulusVal == 0 {
+		return 0, ErrModulusByZero
+	}
+	return math.Mod(inputVal, modulusVal), nil
+}
