@@ -195,6 +195,9 @@ Determines the singular or plural form of a word based on a numeric value.
 ```go
 result := filter.Pluralize(2, "apple", "")
 fmt.Println(result) // Outputs: "apples"
+
+result := filter.Pluralize(1, "%d message", "%d messages")
+fmt.Println(result) // Outputs: "1 message"
 ```
 
 ### Ordinalize

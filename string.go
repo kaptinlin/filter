@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
@@ -173,17 +174,25 @@ func Slugify(input string) string {
 
 // Pluralize outputs the singular or plural version of a string based on the value of a number.
 func Pluralize(count int, singular, plural string) string {
+	var result string
 	if count == 1 {
 		if singular != "" {
-			return singular
+			result = singular
+		} else {
+			result = inflection.Singular(plural)
 		}
-		return inflection.Singular(plural)
 	} else {
 		if plural != "" {
-			return plural
+			result = plural
+		} else {
+			result = inflection.Plural(singular)
 		}
-		return inflection.Plural(singular)
 	}
+
+	if strings.Contains(result, "%d") {
+		return fmt.Sprintf(result, count)
+	}
+	return result
 }
 
 // Ordinalize converts a numeric input to its ordinal English version as a string.
