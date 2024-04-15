@@ -174,21 +174,23 @@ func Slugify(input string) string {
 
 // Pluralize outputs the singular or plural version of a string based on the value of a number.
 func Pluralize(count int, singular, plural string) string {
-	var result string
+	// Handle the case when count is exactly one.
 	if count == 1 {
 		if singular != "" {
-			result = singular
-		} else {
-			result = inflection.Singular(plural)
+			return formatPluralizeWithCount(count, singular)
 		}
-	} else {
-		if plural != "" {
-			result = plural
-		} else {
-			result = inflection.Plural(singular)
-		}
+		return formatPluralizeWithCount(count, inflection.Singular(plural))
 	}
 
+	// Handle the plural case.
+	if plural != "" {
+		return formatPluralizeWithCount(count, plural)
+	}
+	return formatPluralizeWithCount(count, inflection.Plural(singular))
+}
+
+// formatPluralizeWithCount formats the pluralization result string with the count if necessary.
+func formatPluralizeWithCount(count int, result string) string {
 	if strings.Contains(result, "%d") {
 		return fmt.Sprintf(result, count)
 	}

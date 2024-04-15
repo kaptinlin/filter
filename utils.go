@@ -25,7 +25,7 @@ func toCarbon(input interface{}) (carbon.Carbon, error) {
 	case string:
 		parsedTime := carbon.Parse(v)
 		if parsedTime.Error != nil {
-			return carbon.Carbon{}, fmt.Errorf("%w: %s", ErrInvalidTimeFormat, parsedTime.Error)
+			return carbon.Carbon{}, fmt.Errorf("%w: %s", ErrInvalidTimeFormat, parsedTime.Error) //nolint: errorlint
 		}
 		return parsedTime, nil
 	default:

@@ -27,7 +27,7 @@ func Month(input interface{}) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return int(carbonTime.Month()), nil
+	return carbonTime.Month(), nil
 }
 
 // MonthFull returns the full month name from the input date.

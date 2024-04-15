@@ -2,6 +2,7 @@
 
 The `filter` package offers a rich set of utilities for Go developers, focusing on string manipulation, array and slice operations, date and time formatting, number formatting, and mathematical computations. Its goal is to simplify handling common programming tasks. Below is an outline of available features and instructions for getting started.
 
+
 ## Table of Contents
 
 - [Installing](#installing)

@@ -34,27 +34,27 @@ func Extract(input interface{}, dotKey string) (interface{}, error) {
 
 		currentVal := reflect.ValueOf(current)
 
-		if i < len(parts)-1 {
-			if currentVal.Kind() != reflect.Map && currentVal.Kind() != reflect.Slice && currentVal.Kind() != reflect.Array {
-				return nil, ErrInvalidKeyType
-			}
+		// Early termination if the current type is not compatible with deeper examination
+		if i < len(parts)-1 && currentVal.Kind() != reflect.Map && currentVal.Kind() != reflect.Slice && currentVal.Kind() != reflect.Array {
+			return nil, ErrInvalidKeyType
 		}
 
 		switch currentVal.Kind() {
 		case reflect.Map:
 			value := currentVal.MapIndex(reflect.ValueOf(part))
 			if !value.IsValid() {
-				return nil, fmt.Errorf("%w: %s", ErrKeyNotFound, part)
+				return nil, fmt.Errorf("%w: key not found '%s'", ErrKeyNotFound, part)
 			}
 			current = value.Interface()
 		case reflect.Slice, reflect.Array:
 			index, err := strconv.Atoi(part)
 			if err != nil || index < 0 || index >= currentVal.Len() {
-				return nil, fmt.Errorf("%w: %s", ErrIndexOutOfRange, part)
+				return nil, fmt.Errorf("%w: index out of range '%s'", ErrIndexOutOfRange, part)
 			}
 			current = currentVal.Index(index).Interface()
 		default:
-			return nil, ErrInvalidKeyType
+			// Handle unsupported types gracefully
+			return nil, fmt.Errorf("%w: unsupported type '%s'", ErrInvalidKeyType, currentVal.Kind())
 		}
 	}
 

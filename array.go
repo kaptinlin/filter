@@ -1,12 +1,12 @@
 package filter
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"reflect"
 	"strings"
-	"time"
 )
 
 var (
@@ -42,10 +42,11 @@ func Join(input interface{}, separator string) (string, error) {
 		return "", err
 	}
 
-	var strs []string
+	strs := make([]string, 0, len(slice))
 	for _, item := range slice {
 		strs = append(strs, fmt.Sprint(item))
 	}
+
 	return strings.Join(strs, separator), nil
 }
 
@@ -98,10 +99,12 @@ func Random(input interface{}) (interface{}, error) {
 		return nil, ErrEmptySlice
 	}
 
-	src := rand.NewSource(time.Now().UnixNano())
-	rnd := rand.New(src)
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(len(slice))))
+	if err != nil {
+		return nil, err
+	}
 
-	randomIndex := rnd.Intn(len(slice))
+	randomIndex := n.Int64()
 	return slice[randomIndex], nil
 }
 
@@ -133,12 +136,19 @@ func Shuffle(input interface{}) ([]interface{}, error) {
 		return nil, err
 	}
 
-	src := rand.NewSource(time.Now().UnixNano())
-	r := rand.New(src)
+	// Using crypto/rand to securely shuffle the slice.
+	n := len(slice)
+	for i := n - 1; i > 0; i-- {
+		// Generate a random index from 0 to i.
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(i+1)))
+		if err != nil {
+			return nil, err // handle the error from rand.Int
+		}
+		j := num.Int64() // convert *big.Int to int64, then to int
 
-	r.Shuffle(len(slice), func(i, j int) {
+		// Swap the elements at indices i and j.
 		slice[i], slice[j] = slice[j], slice[i]
-	})
+	}
 
 	return slice, nil
 }
@@ -262,7 +272,7 @@ func toFloat64Slice(input interface{}) ([]float64, error) {
 		return nil, err
 	}
 
-	var result []float64
+	result := make([]float64, 0, len(slice))
 	for _, item := range slice {
 		val, err := toFloat64(item)
 		if err != nil {
