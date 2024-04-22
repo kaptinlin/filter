@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	github.com/dustin/go-humanize v1.0.1
-	github.com/golang-module/carbon/v2 v2.3.10
+	github.com/golang-module/carbon/v2 v2.3.12
 	github.com/gosimple/slug v1.14.0
 	github.com/jinzhu/inflection v1.0.0
 	github.com/stretchr/testify v1.9.0
