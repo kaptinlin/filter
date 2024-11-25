@@ -7,7 +7,7 @@ require (
 	github.com/golang-module/carbon/v2 v2.4.0
 	github.com/gosimple/slug v1.14.0
 	github.com/jinzhu/inflection v1.0.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
