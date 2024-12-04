@@ -2,8 +2,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
-github.com/golang-module/carbon/v2 v2.4.0 h1:0I09Fv5Weuax3+hn3abzDMUIuZNcgBB0VKBzBGveZSU=
-github.com/golang-module/carbon/v2 v2.4.0/go.mod h1:1jP9AZ4k2+lmfgY/wZgmtsN52VcHC5YuPM6varKDTkM=
+github.com/golang-module/carbon/v2 v2.4.1 h1:cYUD8T+rHeX+qIybGYpnJ8I90F10dvyEF67VNOO+zZM=
+github.com/golang-module/carbon/v2 v2.4.1/go.mod h1:1jP9AZ4k2+lmfgY/wZgmtsN52VcHC5YuPM6varKDTkM=
 github.com/gosimple/slug v1.14.0 h1:RtTL/71mJNDfpUbCOmnf/XFkzKRtD6wL6Uy+3akm4Es=
 github.com/gosimple/slug v1.14.0/go.mod h1:UiRaFH+GEilHstLUmcBgWcI42viBN7mAb818JrYOeFQ=
 github.com/gosimple/unidecode v1.0.1 h1:hZzFTMMqSswvf0LBJZCZgThIZrpDHFXux9KeGmn6T/o=
