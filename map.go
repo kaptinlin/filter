@@ -34,8 +34,16 @@ func Extract(input interface{}, dotKey string) (interface{}, error) {
 
 		currentVal := reflect.ValueOf(current)
 
+		for currentVal.Kind() == reflect.Ptr {
+			if currentVal.IsNil() {
+				return nil, fmt.Errorf("%w: nil pointer encountered", ErrInvalidKeyType)
+			}
+			currentVal = currentVal.Elem()
+		}
+
 		// Early termination if the current type is not compatible with deeper examination
-		if i < len(parts)-1 && currentVal.Kind() != reflect.Map && currentVal.Kind() != reflect.Slice && currentVal.Kind() != reflect.Array {
+		if i < len(parts)-1 && currentVal.Kind() != reflect.Map && currentVal.Kind() != reflect.Slice &&
+			currentVal.Kind() != reflect.Array && currentVal.Kind() != reflect.Struct {
 			return nil, ErrInvalidKeyType
 		}
 
@@ -52,6 +60,15 @@ func Extract(input interface{}, dotKey string) (interface{}, error) {
 				return nil, fmt.Errorf("%w: index out of range '%s'", ErrIndexOutOfRange, part)
 			}
 			current = currentVal.Index(index).Interface()
+		case reflect.Struct:
+			field := findFieldByJSONTag(currentVal, part)
+			if !field.IsValid() {
+				return nil, fmt.Errorf("%w: JSON field not found '%s'", ErrKeyNotFound, part)
+			}
+			if !field.CanInterface() {
+				return nil, fmt.Errorf("%w: cannot access unexported field '%s'", ErrInvalidKeyType, part)
+			}
+			current = field.Interface()
 		default:
 			// Handle unsupported types gracefully
 			return nil, fmt.Errorf("%w: unsupported type '%s'", ErrInvalidKeyType, currentVal.Kind())
@@ -59,4 +76,18 @@ func Extract(input interface{}, dotKey string) (interface{}, error) {
 	}
 
 	return current, nil
+}
+
+func findFieldByJSONTag(structValue reflect.Value, jsonTag string) reflect.Value {
+	typ := structValue.Type()
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		tag := field.Tag.Get("json")
+
+		tagParts := strings.Split(tag, ",")
+		if tagParts[0] == jsonTag {
+			return structValue.Field(i)
+		}
+	}
+	return reflect.Value{}
 }
