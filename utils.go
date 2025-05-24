@@ -16,20 +16,22 @@ var (
 )
 
 // toCarbon converts an input of type interface{} to a carbon.Carbon object, handling various input types.
-func toCarbon(input interface{}) (carbon.Carbon, error) {
+func toCarbon(input interface{}) (*carbon.Carbon, error) {
 	switch v := input.(type) {
 	case carbon.Carbon:
+		return &v, nil
+	case *carbon.Carbon:
 		return v, nil
 	case time.Time:
 		return carbon.CreateFromStdTime(v), nil
 	case string:
 		parsedTime := carbon.Parse(v)
 		if parsedTime.Error != nil {
-			return carbon.Carbon{}, fmt.Errorf("%w: %s", ErrInvalidTimeFormat, parsedTime.Error) //nolint: errorlint
+			return nil, fmt.Errorf("%w: %s", ErrInvalidTimeFormat, parsedTime.Error) //nolint: errorlint
 		}
 		return parsedTime, nil
 	default:
-		return carbon.Carbon{}, fmt.Errorf("%w: %T", ErrUnsupportedType, input)
+		return nil, fmt.Errorf("%w: %T", ErrUnsupportedType, input)
 	}
 }
 

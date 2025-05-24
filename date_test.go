@@ -412,7 +412,10 @@ func TestWeekday(t *testing.T) {
 }
 
 func TestTimeAgo(t *testing.T) {
-	fixedNow := carbon.Now()
+	// Set a fixed test time
+	fixedNow := carbon.Parse("2023-08-05 13:14:15")
+	carbon.SetTestNow(fixedNow)
+	defer carbon.ClearTestNow() // Clean up after test
 
 	tests := []struct {
 		name           string
@@ -422,19 +425,19 @@ func TestTimeAgo(t *testing.T) {
 	}{
 		{
 			name:           "One hour ago",
-			input:          fixedNow.SubHours(1),
+			input:          fixedNow.Copy().SubHours(1),
 			expectedOutput: "1 hour ago",
 			expectErr:      false,
 		},
 		{
 			name:           "One day ago",
-			input:          fixedNow.SubDays(1),
+			input:          fixedNow.Copy().SubDays(1),
 			expectedOutput: "1 day ago",
 			expectErr:      false,
 		},
 		{
 			name:           "One week ago",
-			input:          time.Now().Add(-7 * 24 * time.Hour),
+			input:          fixedNow.Copy().SubWeeks(1),
 			expectedOutput: "1 week ago",
 			expectErr:      false,
 		},

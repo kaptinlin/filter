@@ -47,7 +47,7 @@ func Extract(input interface{}, dotKey string) (interface{}, error) {
 			return nil, ErrInvalidKeyType
 		}
 
-		switch currentVal.Kind() {
+		switch currentVal.Kind() { //nolint:exhaustive // We handle supported types explicitly and use default for others
 		case reflect.Map:
 			value := currentVal.MapIndex(reflect.ValueOf(part))
 			if !value.IsValid() {
