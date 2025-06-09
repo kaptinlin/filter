@@ -12,7 +12,7 @@ The `filter` package offers a rich set of utilities for Go developers, focusing 
 - [Date Functions](#date-functions)
 - [Number Functions](#number-functions)
 - [Math Functions](#math-functions)
-- [Map Functions](#map-functions)
+- [Data Functions](#data-functions)
 
 ---
 
@@ -135,13 +135,13 @@ func main() {
 | [`Divide`](docs/math.md#divide)                                  | Divides one number by another, with handling for division by zero.        |
 | [`Modulo`](docs/math.md#modulo)                                  | Calculates the remainder of division of one number by another.            |
 
-### Map Functions
+### Data Functions
 
-[Map functions](docs/map.md) provide utilities for extracting and manipulating data from maps, slices, and arrays.
+[Data functions](docs/data.md) provide utilities for extracting and manipulating data from complex nested structures including maps, slices, arrays, structs, pointers, and interfaces.
 
 | Function                                                       | Description                                                           |
 |----------------------------------------------------------------|-----------------------------------------------------------------------|
-| [`Extract`](docs/map.md#extract)                               | Retrieves a nested value from a map, slice, or array using a key path.|
+| [`Extract`](docs/data.md#extract)                               | Retrieves a nested value from any supported data structure using a dot-separated key path. Supports maps, slices, arrays, structs, pointers, and complex nested combinations.|
 
 
 ## Credits

@@ -818,3 +818,345 @@ func TestExtractUltraComplexStructures(t *testing.T) {
 		})
 	}
 }
+
+// TestExtractErrorHandling tests specific error handling scenarios to improve coverage
+func TestExtractErrorHandling(t *testing.T) {
+	type NestedStruct struct {
+		Value int `json:"value"`
+	}
+
+	type TestStruct struct {
+		IntField     int            `json:"int_field"`
+		StringField  string         `json:"string_field"`
+		NestedField  NestedStruct   `json:"nested_field"`
+		SliceField   []int          `json:"slice_field"`
+		MapField     map[string]int `json:"map_field"`
+		PointerField *NestedStruct  `json:"pointer_field"`
+	}
+
+	testData := TestStruct{
+		IntField:     42,
+		StringField:  "hello",
+		NestedField:  NestedStruct{Value: 100},
+		SliceField:   []int{1, 2, 3},
+		MapField:     map[string]int{"key1": 10, "key2": 20},
+		PointerField: &NestedStruct{Value: 200},
+	}
+
+	t.Run("ErrInvalidIndex", func(t *testing.T) {
+		// Test invalid array index (non-numeric)
+		_, err := Extract(testData, "slice_field.invalid")
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrInvalidKeyType)
+	})
+
+	t.Run("ErrInvalidPathStep", func(t *testing.T) {
+		// This error would be triggered by jsonpointer for invalid path steps
+		// Since jsonpointer handles most path validation, we test edge cases
+		_, err := Extract(testData, "int_field.nested.deep")
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrInvalidKeyType)
+	})
+
+	t.Run("ErrNilPointer", func(t *testing.T) {
+		// Test navigation through nil pointer
+		testDataWithNil := TestStruct{
+			IntField:     42,
+			StringField:  "hello",
+			PointerField: nil, // nil pointer
+		}
+		_, err := Extract(testDataWithNil, "pointer_field.value")
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrInvalidKeyType)
+	})
+
+	t.Run("ErrKeyNotFound_Map", func(t *testing.T) {
+		// Test map key not found
+		_, err := Extract(testData, "map_field.nonexistent")
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrKeyNotFound)
+	})
+
+	t.Run("ErrFieldNotFound_Struct", func(t *testing.T) {
+		// Test struct field not found
+		_, err := Extract(testData, "nonexistent_field")
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrKeyNotFound)
+	})
+
+	t.Run("ErrIndexOutOfBounds_Slice", func(t *testing.T) {
+		// Test slice index out of bounds
+		_, err := Extract(testData, "slice_field.10")
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrIndexOutOfRange)
+	})
+
+	t.Run("ErrIndexOutOfBounds_NegativeIndex", func(t *testing.T) {
+		// Test negative array index - jsonpointer treats this as invalid index, not out of bounds
+		_, err := Extract(testData, "slice_field.-1")
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrInvalidKeyType)
+	})
+
+	t.Run("Complex_Error_Path", func(t *testing.T) {
+		// Test complex error path that triggers multiple error checks
+		_, err := Extract(testData, "nested_field.value.invalid.deep.path")
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrInvalidKeyType)
+	})
+}
+
+// TestExtractPointerHandling tests comprehensive pointer handling scenarios
+func TestExtractPointerHandling(t *testing.T) {
+	type Level3 struct {
+		Value string `json:"value"`
+	}
+
+	type Level2 struct {
+		Level3Ptr *Level3 `json:"level3_ptr"`
+		Level3Val Level3  `json:"level3_val"`
+	}
+
+	type Level1 struct {
+		Level2Ptr *Level2 `json:"level2_ptr"`
+		Level2Val Level2  `json:"level2_val"`
+	}
+
+	type RootStruct struct {
+		Level1Ptr    *Level1            `json:"level1_ptr"`
+		Level1Val    Level1             `json:"level1_val"`
+		PointerSlice []*Level3          `json:"pointer_slice"`
+		PointerMap   map[string]*Level3 `json:"pointer_map"`
+	}
+
+	// Create test data with various pointer scenarios
+	testData := RootStruct{
+		Level1Ptr: &Level1{
+			Level2Ptr: &Level2{
+				Level3Ptr: &Level3{Value: "deep_pointer_value"},
+				Level3Val: Level3{Value: "deep_value_through_pointer"},
+			},
+			Level2Val: Level2{
+				Level3Ptr: &Level3{Value: "mixed_pointer_value"},
+				Level3Val: Level3{Value: "mixed_value"},
+			},
+		},
+		Level1Val: Level1{
+			Level2Ptr: &Level2{
+				Level3Ptr: &Level3{Value: "value_pointer_value"},
+				Level3Val: Level3{Value: "all_values"},
+			},
+			Level2Val: Level2{
+				Level3Ptr: nil, // Test nil pointer handling
+				Level3Val: Level3{Value: "partial_nil"},
+			},
+		},
+		PointerSlice: []*Level3{
+			{Value: "slice_ptr_0"},
+			{Value: "slice_ptr_1"},
+			nil, // nil pointer in slice
+		},
+		PointerMap: map[string]*Level3{
+			"key1": {Value: "map_ptr_value1"},
+			"key2": {Value: "map_ptr_value2"},
+			"key3": nil, // nil pointer in map
+		},
+	}
+
+	tests := []struct {
+		name     string
+		key      string
+		expected interface{}
+	}{
+		{
+			name:     "deep_pointer_chain",
+			key:      "level1_ptr.level2_ptr.level3_ptr.value",
+			expected: "deep_pointer_value",
+		},
+		{
+			name:     "mixed_pointer_value_access",
+			key:      "level1_ptr.level2_ptr.level3_val.value",
+			expected: "deep_value_through_pointer",
+		},
+		{
+			name:     "value_with_pointer_access",
+			key:      "level1_val.level2_ptr.level3_ptr.value",
+			expected: "value_pointer_value",
+		},
+		{
+			name:     "all_values_access",
+			key:      "level1_val.level2_ptr.level3_val.value",
+			expected: "all_values",
+		},
+		{
+			name:     "pointer_slice_access",
+			key:      "pointer_slice.0.value",
+			expected: "slice_ptr_0",
+		},
+		{
+			name:     "pointer_slice_second_element",
+			key:      "pointer_slice.1.value",
+			expected: "slice_ptr_1",
+		},
+		{
+			name:     "pointer_map_access",
+			key:      "pointer_map.key1.value",
+			expected: "map_ptr_value1",
+		},
+		{
+			name:     "pointer_map_second_key",
+			key:      "pointer_map.key2.value",
+			expected: "map_ptr_value2",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := Extract(testData, tt.key)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+
+	// Test error cases with pointers
+	errorTests := []struct {
+		name      string
+		key       string
+		errorType error
+	}{
+		{
+			name:      "nil_pointer_in_chain",
+			key:       "level1_val.level2_val.level3_ptr.value",
+			errorType: ErrInvalidKeyType, // jsonpointer.ErrNilPointer maps to ErrInvalidKeyType
+		},
+		{
+			name:      "nil_pointer_in_slice",
+			key:       "pointer_slice.2.value",
+			errorType: ErrInvalidKeyType, // jsonpointer.ErrNilPointer maps to ErrInvalidKeyType
+		},
+		{
+			name:      "nil_pointer_in_map",
+			key:       "pointer_map.key3.value",
+			errorType: ErrInvalidKeyType, // jsonpointer.ErrNilPointer maps to ErrInvalidKeyType
+		},
+		{
+			name:      "out_of_bounds_pointer_slice",
+			key:       "pointer_slice.10.value",
+			errorType: ErrIndexOutOfRange,
+		},
+	}
+
+	for _, tt := range errorTests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := Extract(testData, tt.key)
+			require.Error(t, err)
+			require.ErrorIs(t, err, tt.errorType)
+		})
+	}
+}
+
+// TestExtractInterfaceHandling tests handling of interface{} types
+func TestExtractInterfaceHandling(t *testing.T) {
+	// Test with interface{} containing various types
+	interfaceData := map[string]interface{}{
+		"string_val": "hello",
+		"int_val":    42,
+		"float_val":  3.14,
+		"bool_val":   true,
+		"nil_val":    nil,
+		"nested_map": map[string]interface{}{
+			"inner_string": "inner_value",
+			"inner_int":    100,
+		},
+		"nested_slice": []interface{}{
+			"slice_string",
+			123,
+			map[string]interface{}{
+				"slice_map_key": "slice_map_value",
+			},
+		},
+		"mixed_types": []interface{}{
+			"string",
+			42,
+			map[string]interface{}{
+				"nested": "value",
+			},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		key      string
+		expected interface{}
+	}{
+		{
+			name:     "interface_string",
+			key:      "string_val",
+			expected: "hello",
+		},
+		{
+			name:     "interface_int",
+			key:      "int_val",
+			expected: 42,
+		},
+		{
+			name:     "interface_nested_map",
+			key:      "nested_map.inner_string",
+			expected: "inner_value",
+		},
+		{
+			name:     "interface_nested_slice",
+			key:      "nested_slice.0",
+			expected: "slice_string",
+		},
+		{
+			name:     "interface_deep_nested",
+			key:      "nested_slice.2.slice_map_key",
+			expected: "slice_map_value",
+		},
+		{
+			name:     "interface_mixed_types",
+			key:      "mixed_types.2.nested",
+			expected: "value",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := Extract(interfaceData, tt.key)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+
+	// Test error cases with interfaces
+	errorTests := []struct {
+		name      string
+		key       string
+		errorType error
+	}{
+		{
+			name:      "nil_interface_navigation",
+			key:       "nil_val.something",
+			errorType: ErrInvalidKeyType,
+		},
+		{
+			name:      "primitive_interface_navigation",
+			key:       "int_val.something",
+			errorType: ErrInvalidKeyType,
+		},
+		{
+			name:      "nonexistent_interface_key",
+			key:       "nonexistent",
+			errorType: ErrKeyNotFound,
+		},
+	}
+
+	for _, tt := range errorTests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := Extract(interfaceData, tt.key)
+			require.Error(t, err)
+			require.ErrorIs(t, err, tt.errorType)
+		})
+	}
+}
