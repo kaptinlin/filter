@@ -1,18 +1,11 @@
 package filter
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/dromara/carbon/v2"
-)
-
-var (
-	ErrNotNumeric        = errors.New("input is not numeric")
-	ErrInvalidTimeFormat = errors.New("input has an invalid time format")
-	ErrUnsupportedType   = errors.New("input is of an unsupported type")
 )
 
 // toCarbon converts an input of type interface{} to a carbon.Carbon object, handling various input types.

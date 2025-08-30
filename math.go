@@ -1,13 +1,7 @@
 package filter
 
 import (
-	"errors"
 	"math"
-)
-
-var (
-	ErrDivisionByZero = errors.New("division by zero")
-	ErrModulusByZero  = errors.New("modulus by zero")
 )
 
 // Abs calculates the absolute value of the input.

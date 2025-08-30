@@ -1,18 +1,10 @@
 package filter
 
 import (
-	"crypto/rand"
-	"errors"
 	"fmt"
-	"math/big"
+	"math/rand/v2"
 	"reflect"
 	"strings"
-)
-
-var (
-	ErrNotSlice         = errors.New("expected input to be a slice")
-	ErrEmptySlice       = errors.New("slice is empty")
-	ErrInvalidArguments = errors.New("invalid number of arguments")
 )
 
 // Unique removes duplicate elements from a slice.
@@ -22,13 +14,15 @@ func Unique(input interface{}) ([]interface{}, error) {
 		return nil, err
 	}
 
-	var uniqueItems []interface{}
+	seen := make(map[interface{}]bool)
+	var result []interface{}
 	for _, item := range slice {
-		if !contains(uniqueItems, item) {
-			uniqueItems = append(uniqueItems, item)
+		if !seen[item] {
+			seen[item] = true
+			result = append(result, item)
 		}
 	}
-	return uniqueItems, nil
+	return result, nil
 }
 
 // Join joins the elements of a slice into a single string with a given separator.
@@ -56,11 +50,10 @@ func First(input interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(slice) > 0 {
-		return slice[0], nil
+	if len(slice) == 0 {
+		return nil, ErrEmptySlice
 	}
-
-	return nil, ErrEmptySlice
+	return slice[0], nil
 }
 
 // Index returns the element at a specified index in a slice.
@@ -99,12 +92,7 @@ func Random(input interface{}) (interface{}, error) {
 		return nil, ErrEmptySlice
 	}
 
-	n, err := rand.Int(rand.Reader, big.NewInt(int64(len(slice))))
-	if err != nil {
-		return nil, err
-	}
-
-	randomIndex := n.Int64()
+	randomIndex := rand.IntN(len(slice)) //nolint:gosec // math/rand/v2 is acceptable for non-cryptographic use
 	return slice[randomIndex], nil
 }
 
@@ -116,15 +104,8 @@ func Reverse(input interface{}) ([]interface{}, error) {
 	}
 
 	result := make([]interface{}, len(slice))
-
-	if len(slice) == 0 {
-		return result, nil
-	}
-
-	copy(result, slice)
-
-	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
-		result[i], result[j] = result[j], result[i]
+	for i, v := range slice {
+		result[len(slice)-1-i] = v
 	}
 	return result, nil
 }
@@ -136,21 +117,16 @@ func Shuffle(input interface{}) ([]interface{}, error) {
 		return nil, err
 	}
 
-	// Using crypto/rand to securely shuffle the slice.
-	n := len(slice)
-	for i := n - 1; i > 0; i-- {
-		// Generate a random index from 0 to i.
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(i+1)))
-		if err != nil {
-			return nil, err // handle the error from rand.Int
-		}
-		j := num.Int64() // convert *big.Int to int64, then to int
+	// Create a copy to avoid modifying the original
+	result := make([]interface{}, len(slice))
+	copy(result, slice)
 
-		// Swap the elements at indices i and j.
-		slice[i], slice[j] = slice[j], slice[i]
-	}
+	// Use math/rand/v2 for efficient shuffling
+	rand.Shuffle(len(result), func(i, j int) {
+		result[i], result[j] = result[j], result[i]
+	})
 
-	return slice, nil
+	return result, nil
 }
 
 // Size returns the size (length) of a slice.
@@ -253,16 +229,6 @@ func Map(input interface{}, key string) ([]interface{}, error) {
 		result = append(result, value)
 	}
 	return result, nil
-}
-
-// contains checks if a slice contains a specific element.
-func contains(slice []interface{}, item interface{}) bool {
-	for _, elem := range slice {
-		if elem == item {
-			return true
-		}
-	}
-	return false
 }
 
 // toFloat64Slice attempts to convert an interface{} to a slice of float64.

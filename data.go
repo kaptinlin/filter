@@ -8,13 +8,6 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
-// Defining custom error types for consistent error handling
-var (
-	ErrKeyNotFound     = errors.New("key not found")
-	ErrIndexOutOfRange = errors.New("index out of range")
-	ErrInvalidKeyType  = errors.New("invalid key type")
-)
-
 // Extract retrieves a value from input using dot-separated key notation.
 // It supports maps, slices, arrays, structs, pointers, and interfaces.
 //

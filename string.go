@@ -70,24 +70,24 @@ func Lower(input string) string {
 // Titleize capitalizes the start of each part of the string.
 func Titleize(input string) string {
 	parts := toParts(input, defaultSpaceRunes, true)
-	var result = make([]string, 0, len(parts))
+	var result strings.Builder
 
-	for _, part := range parts {
-		runes := []rune(part)
-		var x string
-		for i, r := range runes {
-			if i == 0 || (i > 0 && runes[i-1] == '-') { // Check if first character or follows a hyphen
-				x += string(unicode.ToTitle(r))
-			} else {
-				x += string(r)
-			}
+	for i, part := range parts {
+		if i > 0 {
+			result.WriteByte(' ')
 		}
-		if len(x) > 0 {
-			result = append(result, x)
+
+		runes := []rune(part)
+		for j, r := range runes {
+			if j == 0 || (j > 0 && runes[j-1] == '-') {
+				result.WriteRune(unicode.ToTitle(r))
+			} else {
+				result.WriteRune(r)
+			}
 		}
 	}
 
-	return strings.Join(result, " ")
+	return result.String()
 }
 
 // Capitalize will capitalize the first letter of the string.
