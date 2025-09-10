@@ -44,14 +44,14 @@ func Extract(input interface{}, key string) (interface{}, error) {
 	result, err := jsonpointer.Get(input, parts...)
 	if err != nil {
 		// Map jsonpointer errors to filter errors for consistency
-		return nil, mapJsonPointerError(err, key)
+		return nil, mapJSONPointerError(err, key)
 	}
 
 	return result, nil
 }
 
-// mapJsonPointerError maps jsonpointer library errors to filter package errors
-func mapJsonPointerError(err error, key string) error {
+// mapJSONPointerError maps jsonpointer library errors to filter package errors
+func mapJSONPointerError(err error, key string) error {
 	switch {
 	case errors.Is(err, jsonpointer.ErrKeyNotFound):
 		return fmt.Errorf("%w: map key not found '%s'", ErrKeyNotFound, key)

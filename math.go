@@ -13,26 +13,26 @@ func Abs(input interface{}) (float64, error) {
 	return math.Abs(val), nil
 }
 
-// AtLeast ensures the input is at least as large as the min value.
-func AtLeast(input interface{}, min interface{}) (float64, error) {
+// AtLeast ensures the input is at least as large as the minimum value.
+func AtLeast(input interface{}, minimum interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	minVal, err := toFloat64(min)
+	minVal, err := toFloat64(minimum)
 	if err != nil {
 		return 0, err
 	}
 	return math.Max(inputVal, minVal), nil
 }
 
-// AtMost ensures the input is no larger than the max value.
-func AtMost(input interface{}, max interface{}) (float64, error) {
+// AtMost ensures the input is no larger than the maximum value.
+func AtMost(input interface{}, maximum interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	maxVal, err := toFloat64(max)
+	maxVal, err := toFloat64(maximum)
 	if err != nil {
 		return 0, err
 	}
@@ -110,7 +110,7 @@ func Times(input interface{}, multiplier interface{}) (float64, error) {
 	return inputVal * multiplierVal, nil
 }
 
-// Divided divides the first value by the second, including error handling for division by zero.
+// Divide divides the first value by the second, including error handling for division by zero.
 func Divide(input interface{}, divisor interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {

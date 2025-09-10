@@ -30,11 +30,11 @@ func Split(input, delimiter string) []string {
 }
 
 // Replace replaces all occurrences of a substring with another string in the input string.
-func Replace(input, old, new string) string {
+func Replace(input, old, replacement string) string {
 	if old == "" {
 		return input
 	}
-	return strings.ReplaceAll(input, old, new)
+	return strings.ReplaceAll(input, old, replacement)
 }
 
 // Remove removes all occurrences of a substring from a string.
