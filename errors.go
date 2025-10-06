@@ -25,4 +25,6 @@ var (
 	ErrDivisionByZero = errors.New("division by zero")
 	// ErrModulusByZero indicates modulus by zero
 	ErrModulusByZero = errors.New("modulus by zero")
+	// ErrUnsupportedSizeType indicates the input type is not supported by the size filter
+	ErrUnsupportedSizeType = errors.New("size filter expects a slice, array, or map")
 )

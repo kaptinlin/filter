@@ -129,13 +129,24 @@ func Shuffle(input interface{}) ([]interface{}, error) {
 	return result, nil
 }
 
-// Size returns the size (length) of a slice.
+// Size returns the size (length) of a collection (slice, array, or map).
+// For string length, use the Length function in string.go instead.
 func Size(input interface{}) (int, error) {
-	slice, err := toSlice(input)
-	if err != nil {
-		return 0, err
+	val := reflect.ValueOf(input)
+	kind := val.Kind()
+
+	switch kind {
+	case reflect.Slice, reflect.Array, reflect.Map:
+		return val.Len(), nil
+	case reflect.Invalid, reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
+		reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Uintptr, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
+		reflect.Chan, reflect.Func, reflect.Interface, reflect.Pointer, reflect.String,
+		reflect.Struct, reflect.UnsafePointer:
+		return 0, fmt.Errorf("%w: got %T", ErrUnsupportedSizeType, input)
+	default:
+		return 0, fmt.Errorf("%w: got %T", ErrUnsupportedSizeType, input)
 	}
-	return len(slice), nil
 }
 
 // findExtreme finds the extreme value (min or max) in a slice based on the comparison function.
@@ -251,7 +262,10 @@ func toFloat64Slice(input interface{}) ([]float64, error) {
 // toSlice attempts to convert an interface{} to a slice of interface{}.
 func toSlice(input interface{}) ([]interface{}, error) {
 	valRef := reflect.ValueOf(input)
-	if valRef.Kind() != reflect.Slice {
+	kind := valRef.Kind()
+
+	// Support both slice and array types
+	if kind != reflect.Slice && kind != reflect.Array {
 		return nil, ErrNotSlice
 	}
 
