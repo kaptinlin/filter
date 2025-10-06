@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"reflect"
+	"slices"
 	"strings"
 )
 
@@ -14,8 +15,8 @@ func Unique(input interface{}) ([]interface{}, error) {
 		return nil, err
 	}
 
-	seen := make(map[interface{}]bool)
-	var result []interface{}
+	seen := make(map[interface{}]bool, len(slice))
+	result := make([]interface{}, 0, len(slice))
 	for _, item := range slice {
 		if !seen[item] {
 			seen[item] = true
@@ -118,8 +119,7 @@ func Shuffle(input interface{}) ([]interface{}, error) {
 	}
 
 	// Create a copy to avoid modifying the original
-	result := make([]interface{}, len(slice))
-	copy(result, slice)
+	result := slices.Clone(slice)
 
 	// Use math/rand/v2 for efficient shuffling
 	rand.Shuffle(len(result), func(i, j int) {
@@ -138,6 +138,21 @@ func Size(input interface{}) (int, error) {
 	return len(slice), nil
 }
 
+// findExtreme finds the extreme value (min or max) in a slice based on the comparison function.
+func findExtreme(slice []float64, isExtreme func(current, candidate float64) bool) (float64, error) {
+	if len(slice) == 0 {
+		return 0, ErrEmptySlice
+	}
+
+	extremeVal := slice[0]
+	for _, val := range slice[1:] {
+		if isExtreme(extremeVal, val) {
+			extremeVal = val
+		}
+	}
+	return extremeVal, nil
+}
+
 // Max returns the maximum value from a slice of float64.
 func Max(input interface{}) (float64, error) {
 	slice, err := toFloat64Slice(input)
@@ -145,17 +160,9 @@ func Max(input interface{}) (float64, error) {
 		return 0, err
 	}
 
-	if len(slice) == 0 {
-		return 0, ErrEmptySlice
-	}
-
-	maxVal := slice[0]
-	for _, val := range slice[1:] {
-		if val > maxVal {
-			maxVal = val
-		}
-	}
-	return maxVal, nil
+	return findExtreme(slice, func(current, candidate float64) bool {
+		return candidate > current
+	})
 }
 
 // Min returns the minimum value from a slice of float64.
@@ -165,17 +172,9 @@ func Min(input interface{}) (float64, error) {
 		return 0, err
 	}
 
-	if len(slice) == 0 {
-		return 0, ErrEmptySlice
-	}
-
-	minVal := slice[0]
-	for _, val := range slice[1:] {
-		if val < minVal {
-			minVal = val
-		}
-	}
-	return minVal, nil
+	return findExtreme(slice, func(current, candidate float64) bool {
+		return candidate < current
+	})
 }
 
 // Sum calculates the sum of all elements in a slice of float64.
@@ -203,12 +202,12 @@ func Average(input interface{}) (float64, error) {
 		return 0, ErrEmptySlice
 	}
 
-	sum := 0.0
-	for _, val := range slice {
-		sum += val
+	sum, err := Sum(input)
+	if err != nil {
+		return 0, err
 	}
-	average := sum / float64(len(slice))
-	return average, nil
+
+	return sum / float64(len(slice)), nil
 }
 
 // Map returns a slice of values for a specified key from each map in the input slice.
@@ -256,9 +255,9 @@ func toSlice(input interface{}) ([]interface{}, error) {
 		return nil, ErrNotSlice
 	}
 
-	var result []interface{}
+	result := make([]interface{}, valRef.Len())
 	for i := 0; i < valRef.Len(); i++ {
-		result = append(result, valRef.Index(i).Interface())
+		result[i] = valRef.Index(i).Interface()
 	}
 	return result, nil
 }

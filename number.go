@@ -24,6 +24,10 @@ func Bytes(input interface{}) (string, error) {
 		return "", err
 	}
 
+	if n < 0 {
+		return "", ErrNotNumeric
+	}
+
 	formattedBytes := humanize.Bytes(uint64(n))
 	return formattedBytes, nil
 }
