@@ -3,11 +3,11 @@ module github.com/kaptinlin/filter
 go 1.24.7
 
 require (
-	github.com/dromara/carbon/v2 v2.6.12
+	github.com/dromara/carbon/v2 v2.6.15
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gosimple/slug v1.15.0
 	github.com/jinzhu/inflection v1.0.0
-	github.com/kaptinlin/jsonpointer v0.4.6
+	github.com/kaptinlin/jsonpointer v0.4.7
 	github.com/stretchr/testify v1.11.1
 )
 

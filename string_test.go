@@ -529,3 +529,57 @@ func TestTruncateWords(t *testing.T) {
 		})
 	}
 }
+
+// Benchmark tests for string operations
+
+func BenchmarkCamelize(b *testing.B) {
+	input := "hello_world_this_is_a_long_test_string"
+	for b.Loop() {
+		_ = Camelize(input)
+	}
+}
+
+func BenchmarkTruncateWords(b *testing.B) {
+	input := "This is a sample text with many words that we want to truncate at some point to test performance "
+	for i := range 10 {
+		input += fmt.Sprintf("word%d ", i)
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_ = TruncateWords(input, 50)
+	}
+}
+
+func BenchmarkTruncate(b *testing.B) {
+	input := "This is a very long string that needs to be truncated for testing purposes and performance benchmarking"
+	for b.Loop() {
+		_ = Truncate(input, 50)
+	}
+}
+
+func BenchmarkSlugify(b *testing.B) {
+	input := "Hello World This Is A Test String"
+	for b.Loop() {
+		_ = Slugify(input)
+	}
+}
+
+func BenchmarkTitleize(b *testing.B) {
+	input := "hello_world this-is a_test string"
+	for b.Loop() {
+		_ = Titleize(input)
+	}
+}
+
+func BenchmarkDasherize(b *testing.B) {
+	input := "HelloWorld ThisIsA TestString"
+	for b.Loop() {
+		_ = Dasherize(input)
+	}
+}
+
+func BenchmarkPluralize(b *testing.B) {
+	for b.Loop() {
+		_ = Pluralize(5, "cat", "")
+	}
+}

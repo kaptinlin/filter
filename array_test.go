@@ -880,3 +880,82 @@ func elementInSlice(element interface{}, input interface{}) bool {
 	}
 	return false
 }
+
+// Benchmark tests for array operations
+
+func BenchmarkUnique(b *testing.B) {
+	input := make([]interface{}, 1000)
+	for i := range 1000 {
+		input[i] = i % 100 // 100 unique values
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Unique(input)
+	}
+}
+
+func BenchmarkShuffle(b *testing.B) {
+	input := make([]interface{}, 1000)
+	for i := range 1000 {
+		input[i] = i
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Shuffle(input)
+	}
+}
+
+func BenchmarkReverse(b *testing.B) {
+	input := make([]interface{}, 1000)
+	for i := range 1000 {
+		input[i] = i
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Reverse(input)
+	}
+}
+
+func BenchmarkJoin(b *testing.B) {
+	input := make([]interface{}, 100)
+	for i := range 100 {
+		input[i] = i
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Join(input, ",")
+	}
+}
+
+func BenchmarkSum(b *testing.B) {
+	input := make([]interface{}, 1000)
+	for i := range 1000 {
+		input[i] = float64(i)
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Sum(input)
+	}
+}
+
+func BenchmarkMax(b *testing.B) {
+	input := make([]interface{}, 1000)
+	for i := range 1000 {
+		input[i] = float64(i)
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Max(input)
+	}
+}
+
+func BenchmarkAverage(b *testing.B) {
+	input := make([]interface{}, 1000)
+	for i := range 1000 {
+		input[i] = float64(i)
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Average(input)
+	}
+}
