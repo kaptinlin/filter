@@ -1,6 +1,6 @@
 module github.com/kaptinlin/filter
 
-go 1.24.7
+go 1.25
 
 require (
 	github.com/dromara/carbon/v2 v2.6.15
