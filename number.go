@@ -11,10 +11,7 @@ func Number(input interface{}, format string) (string, error) {
 		return "", err
 	}
 
-	// Here, we'd directly call the humanize.FormatFloat if it existed as described.
-	// Since it doesn't, this call is illustrative only.
-	formattedNumber := humanize.FormatFloat(format, n)
-	return formattedNumber, nil
+	return humanize.FormatFloat(format, n), nil
 }
 
 // Bytes formats a numeric value into a human-readable byte format.
@@ -25,9 +22,8 @@ func Bytes(input interface{}) (string, error) {
 	}
 
 	if n < 0 {
-		return "", ErrNotNumeric
+		return "", ErrNegativeValue
 	}
 
-	formattedBytes := humanize.Bytes(uint64(n))
-	return formattedBytes, nil
+	return humanize.Bytes(uint64(n)), nil
 }

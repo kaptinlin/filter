@@ -27,4 +27,6 @@ var (
 	ErrModulusByZero = errors.New("modulus by zero")
 	// ErrUnsupportedSizeType indicates the input type is not supported by the size filter
 	ErrUnsupportedSizeType = errors.New("size filter expects a slice, array, or map")
+	// ErrNegativeValue indicates the input must be non-negative
+	ErrNegativeValue = errors.New("input must be non-negative")
 )

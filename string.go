@@ -221,21 +221,12 @@ func Truncate(input string, maxLength int) string {
 		return ""
 	}
 
-	if utf8.RuneCountInString(input) <= maxLength {
+	runes := []rune(input)
+	if len(runes) <= maxLength {
 		return input
 	}
 
-	truncated := make([]rune, 0, maxLength)
-	count := 0
-	for _, r := range input {
-		if count == maxLength {
-			break
-		}
-		truncated = append(truncated, r)
-		count++
-	}
-
-	return string(truncated) + "..."
+	return string(runes[:maxLength]) + "..."
 }
 
 // TruncateWords truncates a string to a specified number of words and appends "..." if it was longer.

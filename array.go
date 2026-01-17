@@ -135,33 +135,11 @@ func Size(input interface{}) (int, error) {
 	val := reflect.ValueOf(input)
 	kind := val.Kind()
 
-	switch kind {
-	case reflect.Slice, reflect.Array, reflect.Map:
+	if kind == reflect.Slice || kind == reflect.Array || kind == reflect.Map {
 		return val.Len(), nil
-	case reflect.Invalid, reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
-		reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		reflect.Uintptr, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
-		reflect.Chan, reflect.Func, reflect.Interface, reflect.Pointer, reflect.String,
-		reflect.Struct, reflect.UnsafePointer:
-		return 0, fmt.Errorf("%w: got %T", ErrUnsupportedSizeType, input)
-	default:
-		return 0, fmt.Errorf("%w: got %T", ErrUnsupportedSizeType, input)
-	}
-}
-
-// findExtreme finds the extreme value (min or max) in a slice based on the comparison function.
-func findExtreme(slice []float64, isExtreme func(current, candidate float64) bool) (float64, error) {
-	if len(slice) == 0 {
-		return 0, ErrEmptySlice
 	}
 
-	extremeVal := slice[0]
-	for _, val := range slice[1:] {
-		if isExtreme(extremeVal, val) {
-			extremeVal = val
-		}
-	}
-	return extremeVal, nil
+	return 0, fmt.Errorf("%w: got %T", ErrUnsupportedSizeType, input)
 }
 
 // Max returns the maximum value from a slice of float64.
@@ -171,9 +149,11 @@ func Max(input interface{}) (float64, error) {
 		return 0, err
 	}
 
-	return findExtreme(slice, func(current, candidate float64) bool {
-		return candidate > current
-	})
+	if len(slice) == 0 {
+		return 0, ErrEmptySlice
+	}
+
+	return slices.Max(slice), nil
 }
 
 // Min returns the minimum value from a slice of float64.
@@ -183,9 +163,11 @@ func Min(input interface{}) (float64, error) {
 		return 0, err
 	}
 
-	return findExtreme(slice, func(current, candidate float64) bool {
-		return candidate < current
-	})
+	if len(slice) == 0 {
+		return 0, ErrEmptySlice
+	}
+
+	return slices.Min(slice), nil
 }
 
 // Sum calculates the sum of all elements in a slice of float64.
@@ -213,9 +195,9 @@ func Average(input interface{}) (float64, error) {
 		return 0, ErrEmptySlice
 	}
 
-	sum, err := Sum(input)
-	if err != nil {
-		return 0, err
+	var sum float64
+	for _, val := range slice {
+		sum += val
 	}
 
 	return sum / float64(len(slice)), nil
@@ -270,7 +252,7 @@ func toSlice(input interface{}) ([]interface{}, error) {
 	}
 
 	result := make([]interface{}, valRef.Len())
-	for i := 0; i < valRef.Len(); i++ {
+	for i := range valRef.Len() {
 		result[i] = valRef.Index(i).Interface()
 	}
 	return result, nil
