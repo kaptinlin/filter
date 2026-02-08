@@ -129,8 +129,8 @@ func Shuffle(input interface{}) ([]interface{}, error) {
 	return result, nil
 }
 
-// Size returns the size (length) of a collection (slice, array, or map).
-// For string length, use the Length function in string.go instead.
+// Size returns the length of a collection (slice, array, or map).
+// For string length, use [Length] instead.
 func Size(input interface{}) (int, error) {
 	val := reflect.ValueOf(input)
 	kind := val.Kind()

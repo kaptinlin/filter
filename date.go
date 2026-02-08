@@ -66,7 +66,8 @@ func Weekday(input interface{}) (string, error) {
 	return c.ToWeekString(), nil
 }
 
-// TimeAgo returns a human-readable string representing the time difference between the current time and the input date.
+// TimeAgo returns a human-readable string representing the time difference
+// between the current time and the input date.
 func TimeAgo(input interface{}) (string, error) {
 	carbonTime, err := toCarbon(input)
 	if err != nil {

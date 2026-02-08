@@ -14,7 +14,7 @@ func Abs(input interface{}) (float64, error) {
 }
 
 // AtLeast ensures the input is at least as large as the minimum value.
-func AtLeast(input interface{}, minimum interface{}) (float64, error) {
+func AtLeast(input, minimum interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err
@@ -27,7 +27,7 @@ func AtLeast(input interface{}, minimum interface{}) (float64, error) {
 }
 
 // AtMost ensures the input is no larger than the maximum value.
-func AtMost(input interface{}, maximum interface{}) (float64, error) {
+func AtMost(input, maximum interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err
@@ -40,7 +40,7 @@ func AtMost(input interface{}, maximum interface{}) (float64, error) {
 }
 
 // Round rounds the input to the specified number of decimal places.
-func Round(input interface{}, precision interface{}) (float64, error) {
+func Round(input, precision interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err
@@ -72,7 +72,7 @@ func Ceil(input interface{}) (float64, error) {
 }
 
 // Plus adds two numbers.
-func Plus(input interface{}, addend interface{}) (float64, error) {
+func Plus(input, addend interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err
@@ -85,7 +85,7 @@ func Plus(input interface{}, addend interface{}) (float64, error) {
 }
 
 // Minus subtracts the second value from the first.
-func Minus(input interface{}, subtrahend interface{}) (float64, error) {
+func Minus(input, subtrahend interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err
@@ -98,7 +98,7 @@ func Minus(input interface{}, subtrahend interface{}) (float64, error) {
 }
 
 // Times multiplies the first value by the second.
-func Times(input interface{}, multiplier interface{}) (float64, error) {
+func Times(input, multiplier interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err
@@ -111,7 +111,7 @@ func Times(input interface{}, multiplier interface{}) (float64, error) {
 }
 
 // Divide divides the first value by the second, including error handling for division by zero.
-func Divide(input interface{}, divisor interface{}) (float64, error) {
+func Divide(input, divisor interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err
@@ -127,7 +127,7 @@ func Divide(input interface{}, divisor interface{}) (float64, error) {
 }
 
 // Modulo returns the remainder of the division of the first value by the second.
-func Modulo(input interface{}, modulus interface{}) (float64, error) {
+func Modulo(input, modulus interface{}) (float64, error) {
 	inputVal, err := toFloat64(input)
 	if err != nil {
 		return 0, err

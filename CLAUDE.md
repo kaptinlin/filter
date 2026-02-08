@@ -29,7 +29,7 @@ This is a Go utility library (`github.com/kaptinlin/filter`) that provides templ
 
 ### Core Modules
 - **string.go**: String manipulation functions (trim, replace, case conversions, pluralization)
-- **array.go**: Slice operations (unique, join, first/last, shuffle, aggregations) with both interface{} and generic versions
+- **array.go**: Slice operations (unique, join, first/last, shuffle, aggregations)
 - **date.go**: Date/time formatting and manipulation using carbon library
 - **number.go**: Number formatting including byte formatting
 - **math.go**: Mathematical operations (abs, round, basic arithmetic)
@@ -57,13 +57,16 @@ The codebase uses custom error types defined in errors.go:
 - `ErrInvalidKeyType` - For invalid key types in data extraction
 - `ErrDivisionByZero` - For division by zero operations
 - `ErrModulusByZero` - For modulus by zero operations
+- `ErrUnsupportedSizeType` - For unsupported types in Size filter
+- `ErrNegativeValue` - For non-negative value requirements
 
 ### Testing Strategy
 - Each module has corresponding `*_test.go` files with comprehensive test coverage
+- `example_test.go` provides runnable Godoc examples for key functions
 - Tests use `github.com/stretchr/testify` for assertions
 - Race condition testing is enabled by default
 
 ### Code Quality
-- Uses golangci-lint v2.4.0 with extensive linter rules enabled
+- Uses golangci-lint v2.7.2 with extensive linter rules enabled
 - Enforces consistent code formatting with gofmt and goimports
 - Custom linter configuration in `.golangci.yml` excludes certain rules for test files

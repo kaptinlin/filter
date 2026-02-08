@@ -11,6 +11,8 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
+var defaultSpaceRunes = []rune{'_', ' ', ':', '-', '/'}
+
 // Default sets a default value for an empty string.
 func Default(input, defaultValue string) string {
 	if input == "" {
@@ -90,7 +92,7 @@ func Titleize(input string) string {
 	return result.String()
 }
 
-// Capitalize will capitalize the first letter of the string.
+// Capitalize capitalizes the first letter of the string.
 func Capitalize(input string) string {
 	if input == "" {
 		return ""
@@ -102,7 +104,8 @@ func Capitalize(input string) string {
 	return string(capitalizedFirstRune) + input[size:]
 }
 
-// Camelize converts a string to camelCase, lowercasing the first letter of the first segment and capitalizing the first letter of each subsequent segment.
+// Camelize converts a string to camelCase. It lowercases the first letter
+// of the first segment and capitalizes the first letter of each subsequent segment.
 func Camelize(input string) string {
 	parts := toParts(input, defaultSpaceRunes, true)
 	var builder strings.Builder
@@ -149,10 +152,11 @@ func Pascalize(input string) string {
 	return string(unicode.ToUpper(r)) + camelized[size:]
 }
 
-// Dasherize converts a string to a lowercased, dashed string, removing non-alphanumeric characters.
+// Dasherize converts a string to a lowercased, dashed string,
+// removing non-alphanumeric characters.
 func Dasherize(input string) string {
-	var result []string
 	parts := toParts(input, defaultSpaceRunes, true)
+	result := make([]string, 0, len(parts))
 	for _, part := range parts {
 		var builder strings.Builder
 		for _, c := range part {
@@ -167,12 +171,15 @@ func Dasherize(input string) string {
 	return strings.Join(result, "-")
 }
 
-// Slugify converts a string into a URL-friendly "slug", transliterating Unicode characters to ASCII and replacing or removing special characters.
+// Slugify converts a string into a URL-friendly "slug", transliterating
+// Unicode characters to ASCII and replacing or removing special characters.
 func Slugify(input string) string {
 	return slug.Make(input)
 }
 
-// Pluralize outputs the singular or plural version of a string based on the value of a number.
+// Pluralize returns the singular or plural form of a string based on count.
+// If the form string contains "%d", the count is substituted into the result.
+// Otherwise, only the appropriate form string is returned without the count.
 func Pluralize(count int, singular, plural string) string {
 	// Handle the case when count is exactly one.
 	if count == 1 {
@@ -189,19 +196,12 @@ func Pluralize(count int, singular, plural string) string {
 	return formatPluralizeWithCount(count, inflection.Plural(singular))
 }
 
-// formatPluralizeWithCount formats the pluralization result string with the count if necessary.
-func formatPluralizeWithCount(count int, result string) string {
-	if strings.Contains(result, "%d") {
-		return fmt.Sprintf(result, count)
-	}
-	return result
-}
-
 // Ordinalize converts a numeric input to its ordinal English version as a string.
 func Ordinalize(number int) string {
 	suffix := "th"
 	switch number % 100 {
 	case 11, 12, 13:
+		// Teen numbers always use "th" suffix (11th, 12th, 13th)
 	default:
 		switch number % 10 {
 		case 1:
@@ -276,8 +276,6 @@ func TruncateWords(input string, maxWords int) string {
 	return truncated + "..."
 }
 
-var defaultSpaceRunes = []rune{'_', ' ', ':', '-', '/'}
-
 // isSpace checks if a rune is a word separator.
 func isSpace(c rune, spaces []rune) bool {
 	for _, r := range spaces {
@@ -288,7 +286,8 @@ func isSpace(c rune, spaces []rune) bool {
 	return unicode.IsSpace(c)
 }
 
-// Appends parts of a string to a slice after trimming spaces and matching with base acronyms.
+// appendPart appends parts of a string to a slice after trimming
+// spaces and matching with base acronyms.
 func appendPart(a []string, spaces []rune, ss ...string) []string {
 	for _, s := range ss {
 		s = strings.TrimSpace(s)
@@ -306,8 +305,15 @@ func appendPart(a []string, spaces []rune, ss ...string) []string {
 }
 
 // toParts splits a string into identifiable parts, considering acronyms and separators.
+//
+// It scans runes sequentially, checking at each rune:
+//  1. Is it a separator character? If so, flush the current buffer as a part.
+//  2. Is it an uppercase letter following a non-uppercase letter? If splitOnUpperCase
+//     is true, this signals a camelCase boundary (e.g., "helloWorld" -> ["hello", "World"]).
+//  3. Does the current buffer match a known acronym? If so, flush it as a separate part
+//     to prevent merging acronyms with adjacent words (e.g., "HTMLParser" -> ["HTML", "Parser"]).
 func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
-	parts := []string{}
+	var parts []string
 	s = strings.TrimSpace(s)
 	if len(s) == 0 {
 		return parts
@@ -331,7 +337,7 @@ func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 			continue
 		}
 
-		// Modify condition to include splitOnUpperCase check
+		// Split on camelCase boundary: uppercase after non-uppercase
 		if splitOnUpperCase && unicode.IsUpper(c) && !unicode.IsUpper(prev) && x.Len() > 0 {
 			parts = appendPart(parts, spaces, x.String())
 			x.Reset()
@@ -356,4 +362,13 @@ func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 	parts = appendPart(parts, spaces, x.String())
 
 	return parts
+}
+
+// formatPluralizeWithCount formats the pluralization result string
+// with the count if necessary.
+func formatPluralizeWithCount(count int, result string) string {
+	if strings.Contains(result, "%d") {
+		return fmt.Sprintf(result, count)
+	}
+	return result
 }

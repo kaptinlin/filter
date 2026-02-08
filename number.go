@@ -1,7 +1,7 @@
 package filter
 
 import (
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 )
 
 // Number formats a numeric value according to the specified format string.

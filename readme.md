@@ -81,6 +81,7 @@ func main() {
 | [`Join`](docs/array.md#join)                                           | Concatenates slice elements into a single string.       |
 | [`First`](docs/array.md#first)                                         | Retrieves the first element of the slice.               |
 | [`Last`](docs/array.md#last)                                           | Returns the last element of the slice.                  |
+| [`Index`](docs/array.md#index)                                         | Returns the element at a specified index in the slice.  |
 | [`Random`](docs/array.md#random)                                       | Selects a random element from the slice.                |
 | [`Reverse`](docs/array.md#reverse)                                     | Reverses the order of elements in the slice.            |
 | [`Shuffle`](docs/array.md#shuffle)                                     | Randomly rearranges the elements within the slice.      |
@@ -147,10 +148,10 @@ func main() {
 ## Credits
 
 - [go-humanize](https://github.com/dustin/go-humanize)
-- [flect](https://github.com/gobuffalo/flect)
 - [slug](https://github.com/gosimple/slug)
-- [carbon](https://github.com/golang-module/carbon/)
+- [carbon](https://github.com/dromara/carbon)
 - [inflection](https://github.com/jinzhu/inflection)
+- [jsonpointer](https://github.com/kaptinlin/jsonpointer)
 
 ## How to Contribute
 
