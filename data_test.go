@@ -1160,3 +1160,45 @@ func TestExtractInterfaceHandling(t *testing.T) {
 		})
 	}
 }
+
+// Benchmark tests for data extraction operations
+
+func BenchmarkExtractMap(b *testing.B) {
+	data := map[string]interface{}{
+		"level1": map[string]interface{}{
+			"level2": map[string]interface{}{
+				"value": "deep",
+			},
+		},
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Extract(data, "level1.level2.value")
+	}
+}
+
+func BenchmarkExtractSlice(b *testing.B) {
+	data := []interface{}{
+		"first",
+		"second",
+		map[string]interface{}{"key": "value"},
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Extract(data, "2.key")
+	}
+}
+
+func BenchmarkExtractStruct(b *testing.B) {
+	type Inner struct {
+		Value string `json:"value"`
+	}
+	type Outer struct {
+		Inner Inner `json:"inner"`
+	}
+	data := Outer{Inner: Inner{Value: "test"}}
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = Extract(data, "inner.value")
+	}
+}

@@ -129,3 +129,17 @@ func TestBytes(t *testing.T) {
 		})
 	}
 }
+
+// Benchmark tests for number operations
+
+func BenchmarkNumber(b *testing.B) {
+	for b.Loop() {
+		_, _ = Number(12345.6789, "#,###.##")
+	}
+}
+
+func BenchmarkBytes(b *testing.B) {
+	for b.Loop() {
+		_, _ = Bytes(1073741824)
+	}
+}

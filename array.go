@@ -104,10 +104,8 @@ func Reverse(input interface{}) ([]interface{}, error) {
 		return nil, err
 	}
 
-	result := make([]interface{}, len(slice))
-	for i, v := range slice {
-		result[len(slice)-1-i] = v
-	}
+	result := slices.Clone(slice)
+	slices.Reverse(result)
 	return result, nil
 }
 

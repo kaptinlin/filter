@@ -2,6 +2,7 @@ package filter
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -278,12 +279,7 @@ func TruncateWords(input string, maxWords int) string {
 
 // isSpace checks if a rune is a word separator.
 func isSpace(c rune, spaces []rune) bool {
-	for _, r := range spaces {
-		if r == c {
-			return true
-		}
-	}
-	return unicode.IsSpace(c)
+	return slices.Contains(spaces, c) || unicode.IsSpace(c)
 }
 
 // appendPart appends parts of a string to a slice after trimming

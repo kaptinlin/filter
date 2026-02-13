@@ -978,3 +978,59 @@ func TestModulo(t *testing.T) {
 		})
 	}
 }
+
+// Benchmark tests for math operations
+
+func BenchmarkAbs(b *testing.B) {
+	for b.Loop() {
+		_, _ = Abs(-42.5)
+	}
+}
+
+func BenchmarkAtLeast(b *testing.B) {
+	for b.Loop() {
+		_, _ = AtLeast(3, 5)
+	}
+}
+
+func BenchmarkAtMost(b *testing.B) {
+	for b.Loop() {
+		_, _ = AtMost(10, 5)
+	}
+}
+
+func BenchmarkRound(b *testing.B) {
+	for b.Loop() {
+		_, _ = Round(3.14159, 2)
+	}
+}
+
+func BenchmarkFloor(b *testing.B) {
+	for b.Loop() {
+		_, _ = Floor(3.99)
+	}
+}
+
+func BenchmarkCeil(b *testing.B) {
+	for b.Loop() {
+		_, _ = Ceil(3.01)
+	}
+}
+
+func BenchmarkPlus(b *testing.B) {
+	for b.Loop() {
+		_, _ = Plus(10, 20)
+	}
+}
+
+func BenchmarkDivide(b *testing.B) {
+	for b.Loop() {
+		_, _ = Divide(100, 7)
+	}
+}
+
+func BenchmarkModulo(b *testing.B) {
+	for b.Loop() {
+		_, _ = Modulo(100, 7)
+	}
+}

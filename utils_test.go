@@ -54,3 +54,31 @@ func TestToCarbon(t *testing.T) {
 		})
 	}
 }
+
+// Benchmark tests for utility functions
+
+func BenchmarkToCarbon(b *testing.B) {
+	for b.Loop() {
+		_, _ = toCarbon("2024-03-30")
+	}
+}
+
+func BenchmarkToCarbonTime(b *testing.B) {
+	now := time.Now()
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = toCarbon(now)
+	}
+}
+
+func BenchmarkToFloat64(b *testing.B) {
+	for b.Loop() {
+		_, _ = toFloat64(42)
+	}
+}
+
+func BenchmarkToFloat64String(b *testing.B) {
+	for b.Loop() {
+		_, _ = toFloat64("3.14159")
+	}
+}

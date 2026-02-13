@@ -461,3 +461,37 @@ func TestTimeAgo(t *testing.T) {
 		})
 	}
 }
+
+// Benchmark tests for date operations
+
+func BenchmarkDate(b *testing.B) {
+	for b.Loop() {
+		_, _ = Date("2024-03-30", "d/m/Y")
+	}
+}
+
+func BenchmarkDay(b *testing.B) {
+	for b.Loop() {
+		_, _ = Day("2024-03-30")
+	}
+}
+
+func BenchmarkMonth(b *testing.B) {
+	for b.Loop() {
+		_, _ = Month("2024-06-15")
+	}
+}
+
+func BenchmarkYear(b *testing.B) {
+	for b.Loop() {
+		_, _ = Year("2024-06-15")
+	}
+}
+
+func BenchmarkTimeAgo(b *testing.B) {
+	input := carbon.Now().SubHours(3)
+	b.ResetTimer()
+	for b.Loop() {
+		_, _ = TimeAgo(input)
+	}
+}
