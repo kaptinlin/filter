@@ -67,6 +67,6 @@ The codebase uses custom error types defined in errors.go:
 - Race condition testing is enabled by default
 
 ### Code Quality
-- Uses golangci-lint v2.7.2 with extensive linter rules enabled
+- Uses golangci-lint v2.9.0 with extensive linter rules enabled
 - Enforces consistent code formatting with gofmt and goimports
 - Custom linter configuration in `.golangci.yml` excludes certain rules for test files
