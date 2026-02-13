@@ -23,7 +23,7 @@ func AtLeast(input, minimum interface{}) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return math.Max(inputVal, minVal), nil
+	return max(inputVal, minVal), nil
 }
 
 // AtMost ensures the input is no larger than the maximum value.
@@ -36,7 +36,7 @@ func AtMost(input, maximum interface{}) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return math.Min(inputVal, maxVal), nil
+	return min(inputVal, maxVal), nil
 }
 
 // Round rounds the input to the specified number of decimal places.
