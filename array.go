@@ -249,8 +249,9 @@ func toSlice(input any) ([]any, error) {
 		return nil, ErrNotSlice
 	}
 
-	result := make([]any, valRef.Len())
-	for i := range valRef.Len() {
+	length := valRef.Len()
+	result := make([]any, length)
+	for i := range length {
 		result[i] = valRef.Index(i).Interface()
 	}
 	return result, nil

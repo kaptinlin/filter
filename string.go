@@ -73,7 +73,8 @@ func Lower(input string) string {
 // Titleize capitalizes the start of each part of the string.
 func Titleize(input string) string {
 	parts := toParts(input, defaultSpaceRunes, true)
-	var result strings.Builder
+	result := strings.Builder{}
+	result.Grow(len(input))
 
 	for i, part := range parts {
 		if i > 0 {
@@ -109,7 +110,8 @@ func Capitalize(input string) string {
 // of the first segment and capitalizes the first letter of each subsequent segment.
 func Camelize(input string) string {
 	parts := toParts(input, defaultSpaceRunes, true)
-	var builder strings.Builder
+	builder := strings.Builder{}
+	builder.Grow(len(input))
 
 	for i, part := range parts {
 		if acronym, ok := baseAcronyms[strings.ToUpper(part)]; ok {
@@ -117,8 +119,8 @@ func Camelize(input string) string {
 			continue
 		}
 
-		var tempBuilder strings.Builder
-		var capped bool
+		tempBuilder := strings.Builder{}
+		capped := false
 		for _, c := range part {
 			if unicode.IsLetter(c) || unicode.IsDigit(c) {
 				if i == 0 && !capped {
@@ -159,7 +161,8 @@ func Dasherize(input string) string {
 	parts := toParts(input, defaultSpaceRunes, true)
 	result := make([]string, 0, len(parts))
 	for _, part := range parts {
-		var builder strings.Builder
+		builder := strings.Builder{}
+		builder.Grow(len(part))
 		for _, c := range part {
 			if unicode.IsLetter(c) || unicode.IsDigit(c) {
 				builder.WriteRune(unicode.ToLower(c))
@@ -236,8 +239,8 @@ func TruncateWords(input string, maxWords int) string {
 		return ""
 	}
 
-	var words []string
-	var buf strings.Builder
+	words := []string{}
+	buf := strings.Builder{}
 
 	appendWord := func() {
 		word := buf.String()
@@ -309,7 +312,7 @@ func appendPart(a []string, spaces []rune, ss ...string) []string {
 //  3. Does the current buffer match a known acronym? If so, flush it as a separate part
 //     to prevent merging acronyms with adjacent words (e.g., "HTMLParser" -> ["HTML", "Parser"]).
 func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
-	var parts []string
+	parts := []string{}
 	s = strings.TrimSpace(s)
 	if len(s) == 0 {
 		return parts
@@ -317,8 +320,8 @@ func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 	if _, ok := baseAcronyms[strings.ToUpper(s)]; ok {
 		return []string{strings.ToUpper(s)}
 	}
-	var prev rune
-	var x strings.Builder
+	prev := rune(0)
+	x := strings.Builder{}
 	x.Grow(len(s))
 	for _, c := range s {
 		if !utf8.ValidRune(c) {
