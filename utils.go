@@ -9,7 +9,7 @@ import (
 )
 
 // toCarbon converts an input of type interface{} to a carbon.Carbon object, handling various input types.
-func toCarbon(input interface{}) (*carbon.Carbon, error) {
+func toCarbon(input any) (*carbon.Carbon, error) {
 	switch v := input.(type) {
 	case carbon.Carbon:
 		return &v, nil
@@ -29,7 +29,7 @@ func toCarbon(input interface{}) (*carbon.Carbon, error) {
 }
 
 // toFloat64 attempts to convert an interface{} to a float64.
-func toFloat64(input interface{}) (float64, error) {
+func toFloat64(input any) (float64, error) {
 	switch v := input.(type) {
 	case int:
 		return float64(v), nil

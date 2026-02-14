@@ -9,14 +9,14 @@ import (
 )
 
 // Unique removes duplicate elements from a slice.
-func Unique(input interface{}) ([]interface{}, error) {
+func Unique(input any) ([]any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
 	}
 
-	seen := make(map[interface{}]bool, len(slice))
-	result := make([]interface{}, 0, len(slice))
+	seen := make(map[any]bool, len(slice))
+	result := make([]any, 0, len(slice))
 	for _, item := range slice {
 		if !seen[item] {
 			seen[item] = true
@@ -27,7 +27,7 @@ func Unique(input interface{}) ([]interface{}, error) {
 }
 
 // Join joins the elements of a slice into a single string with a given separator.
-func Join(input interface{}, separator string) (string, error) {
+func Join(input any, separator string) (string, error) {
 	if separator == "" {
 		return "", ErrInvalidArguments
 	}
@@ -46,7 +46,7 @@ func Join(input interface{}, separator string) (string, error) {
 }
 
 // First returns the first element of a slice.
-func First(input interface{}) (interface{}, error) {
+func First(input any) (any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func First(input interface{}) (interface{}, error) {
 }
 
 // Index returns the element at a specified index in a slice.
-func Index(input interface{}, index int) (interface{}, error) {
+func Index(input any, index int) (any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func Index(input interface{}, index int) (interface{}, error) {
 }
 
 // Last returns the last element of a slice.
-func Last(input interface{}) (interface{}, error) {
+func Last(input any) (any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func Last(input interface{}) (interface{}, error) {
 }
 
 // Random selects a random element from a slice.
-func Random(input interface{}) (interface{}, error) {
+func Random(input any) (any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func Random(input interface{}) (interface{}, error) {
 }
 
 // Reverse reverses the order of elements in a slice.
-func Reverse(input interface{}) ([]interface{}, error) {
+func Reverse(input any) ([]any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func Reverse(input interface{}) ([]interface{}, error) {
 }
 
 // Shuffle randomly rearranges the elements of the slice.
-func Shuffle(input interface{}) ([]interface{}, error) {
+func Shuffle(input any) ([]any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func Shuffle(input interface{}) ([]interface{}, error) {
 
 // Size returns the length of a collection (slice, array, or map).
 // For string length, use [Length] instead.
-func Size(input interface{}) (int, error) {
+func Size(input any) (int, error) {
 	val := reflect.ValueOf(input)
 	kind := val.Kind()
 
@@ -141,7 +141,7 @@ func Size(input interface{}) (int, error) {
 }
 
 // Max returns the maximum value from a slice of float64.
-func Max(input interface{}) (float64, error) {
+func Max(input any) (float64, error) {
 	slice, err := toFloat64Slice(input)
 	if err != nil {
 		return 0, err
@@ -155,7 +155,7 @@ func Max(input interface{}) (float64, error) {
 }
 
 // Min returns the minimum value from a slice of float64.
-func Min(input interface{}) (float64, error) {
+func Min(input any) (float64, error) {
 	slice, err := toFloat64Slice(input)
 	if err != nil {
 		return 0, err
@@ -169,7 +169,7 @@ func Min(input interface{}) (float64, error) {
 }
 
 // Sum calculates the sum of all elements in a slice of float64.
-func Sum(input interface{}) (float64, error) {
+func Sum(input any) (float64, error) {
 	slice, err := toFloat64Slice(input)
 	if err != nil {
 		return 0, err
@@ -183,7 +183,7 @@ func Sum(input interface{}) (float64, error) {
 }
 
 // Average calculates the average value of elements in a slice of float64.
-func Average(input interface{}) (float64, error) {
+func Average(input any) (float64, error) {
 	slice, err := toFloat64Slice(input)
 	if err != nil {
 		return 0, err
@@ -203,13 +203,13 @@ func Average(input interface{}) (float64, error) {
 
 // Map returns a slice of values for a specified key from each map in the input slice.
 // If the key does not exist in an item, the corresponding value in the result slice will be nil.
-func Map(input interface{}, key string) ([]interface{}, error) {
+func Map(input any, key string) ([]any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]interface{}, 0, len(slice))
+	result := make([]any, 0, len(slice))
 	for _, item := range slice {
 		value, err := Extract(item, key)
 		if err != nil {
@@ -222,7 +222,7 @@ func Map(input interface{}, key string) ([]interface{}, error) {
 }
 
 // toFloat64Slice attempts to convert an interface{} to a slice of float64.
-func toFloat64Slice(input interface{}) ([]float64, error) {
+func toFloat64Slice(input any) ([]float64, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
@@ -240,7 +240,7 @@ func toFloat64Slice(input interface{}) ([]float64, error) {
 }
 
 // toSlice attempts to convert an interface{} to a slice of interface{}.
-func toSlice(input interface{}) ([]interface{}, error) {
+func toSlice(input any) ([]any, error) {
 	valRef := reflect.ValueOf(input)
 	kind := valRef.Kind()
 
@@ -249,7 +249,7 @@ func toSlice(input interface{}) ([]interface{}, error) {
 		return nil, ErrNotSlice
 	}
 
-	result := make([]interface{}, valRef.Len())
+	result := make([]any, valRef.Len())
 	for i := range valRef.Len() {
 		result[i] = valRef.Index(i).Interface()
 	}

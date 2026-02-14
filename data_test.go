@@ -12,72 +12,72 @@ import (
 func TestExtractMap(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
+		input       any
 		key         string
-		expected    interface{}
+		expected    any
 		expectError bool
 		errorType   error
 	}{
 		{
 			name:     "single_level_map",
-			input:    map[string]interface{}{"key1": "value1", "key2": 2},
+			input:    map[string]any{"key1": "value1", "key2": 2},
 			key:      "key1",
 			expected: "value1",
 		},
 		{
 			name:     "nested_map",
-			input:    map[string]interface{}{"level1": map[string]interface{}{"level2": "value2"}},
+			input:    map[string]any{"level1": map[string]any{"level2": "value2"}},
 			key:      "level1.level2",
 			expected: "value2",
 		},
 		{
 			name:     "nested_map_with_slice",
-			input:    map[string]interface{}{"level1": []interface{}{1, 2, map[string]interface{}{"level3": "value3"}}},
+			input:    map[string]any{"level1": []any{1, 2, map[string]any{"level3": "value3"}}},
 			key:      "level1.2.level3",
 			expected: "value3",
 		},
 		{
 			name:        "key_not_found",
-			input:       map[string]interface{}{"key1": "value1"},
+			input:       map[string]any{"key1": "value1"},
 			key:         "key2",
 			expectError: true,
 			errorType:   ErrKeyNotFound,
 		},
 		{
 			name:        "invalid_nesting_key",
-			input:       map[string]interface{}{"key1": "value1"},
+			input:       map[string]any{"key1": "value1"},
 			key:         "key1.level2",
 			expectError: true,
 			errorType:   ErrInvalidKeyType,
 		},
 		{
 			name:     "empty_key_on_non_empty_map",
-			input:    map[string]interface{}{"emptyKey": ""},
+			input:    map[string]any{"emptyKey": ""},
 			key:      "emptyKey",
 			expected: "",
 		},
 		{
 			name:     "numeric_key_on_map",
-			input:    map[string]interface{}{"1": "numeric key"},
+			input:    map[string]any{"1": "numeric key"},
 			key:      "1",
 			expected: "numeric key",
 		},
 		{
 			name:        "nonexistent_nested_map_key",
-			input:       map[string]interface{}{"level1": map[string]interface{}{"level2": map[string]interface{}{}}},
+			input:       map[string]any{"level1": map[string]any{"level2": map[string]any{}}},
 			key:         "level1.level2.nonexistent",
 			expectError: true,
 			errorType:   ErrKeyNotFound,
 		},
 		{
 			name:     "complex_nested_structure_with_arrays",
-			input:    map[string]interface{}{"array": []interface{}{[]interface{}{"nested array value"}}},
+			input:    map[string]any{"array": []any{[]any{"nested array value"}}},
 			key:      "array.0.0",
 			expected: "nested array value",
 		},
 		{
 			name:        "attempt_to_index_into_integer",
-			input:       map[string]interface{}{"int": 42},
+			input:       map[string]any{"int": 42},
 			key:         "int.0",
 			expectError: true,
 			errorType:   ErrInvalidKeyType,
@@ -104,40 +104,40 @@ func TestExtractMap(t *testing.T) {
 func TestExtractSlice(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
+		input       any
 		key         string
-		expected    interface{}
+		expected    any
 		expectError bool
 		errorType   error
 	}{
 		{
 			name:     "direct_access_to_array_item",
-			input:    []interface{}{"first", "second"},
+			input:    []any{"first", "second"},
 			key:      "0",
 			expected: "first",
 		},
 		{
 			name:     "extract_int_from_slice_by_index",
-			input:    []interface{}{1, 2, 3},
+			input:    []any{1, 2, 3},
 			key:      "1",
 			expected: 2,
 		},
 		{
 			name:     "slice_with_mixed_types",
-			input:    []interface{}{42, "string", map[string]interface{}{"key": "value"}},
+			input:    []any{42, "string", map[string]any{"key": "value"}},
 			key:      "2.key",
 			expected: "value",
 		},
 		{
 			name:        "index_out_of_range",
-			input:       []interface{}{"value1", "value2"},
+			input:       []any{"value1", "value2"},
 			key:         "2",
 			expectError: true,
 			errorType:   ErrIndexOutOfRange,
 		},
 		{
 			name:        "empty_key_on_slice",
-			input:       []interface{}{0, 1, 2},
+			input:       []any{0, 1, 2},
 			key:         "",
 			expectError: true,
 			errorType:   ErrKeyNotFound,
@@ -164,7 +164,7 @@ func TestExtractSlice(t *testing.T) {
 func TestExtractEdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
+		input       any
 		key         string
 		expectError bool
 		errorType   error
@@ -178,7 +178,7 @@ func TestExtractEdgeCases(t *testing.T) {
 		},
 		{
 			name:        "empty_key",
-			input:       map[string]interface{}{"key": "value"},
+			input:       map[string]any{"key": "value"},
 			key:         "",
 			expectError: true,
 			errorType:   ErrKeyNotFound,
@@ -217,7 +217,7 @@ func TestExtractSimpleStruct(t *testing.T) {
 	tests := []struct {
 		name     string
 		key      string
-		expected interface{}
+		expected any
 	}{
 		{
 			name:     "access_string_field",
@@ -279,7 +279,7 @@ func TestExtractNestedStruct(t *testing.T) {
 	tests := []struct {
 		name     string
 		key      string
-		expected interface{}
+		expected any
 	}{
 		{
 			name:     "access_basic_field",
@@ -356,7 +356,7 @@ func TestExtractStructWithMap(t *testing.T) {
 	tests := []struct {
 		name     string
 		key      string
-		expected interface{}
+		expected any
 	}{
 		{
 			name:     "access_basic_field",
@@ -432,7 +432,7 @@ func TestExtractStructWithPointers(t *testing.T) {
 	tests := []struct {
 		name     string
 		key      string
-		expected interface{}
+		expected any
 	}{
 		{
 			name:     "access_basic_field",
@@ -569,7 +569,7 @@ func TestExtractComplexSelfReferentialStructures(t *testing.T) {
 	tests := []struct {
 		name     string
 		key      string
-		expected interface{}
+		expected any
 	}{
 		{
 			name:     "access_top_level_field",
@@ -725,7 +725,7 @@ func TestExtractUltraComplexStructures(t *testing.T) {
 	tests := []struct {
 		name     string
 		key      string
-		expected interface{}
+		expected any
 	}{
 		{
 			name:     "access_name",
@@ -966,7 +966,7 @@ func TestExtractPointerHandling(t *testing.T) {
 	tests := []struct {
 		name     string
 		key      string
-		expected interface{}
+		expected any
 	}{
 		{
 			name:     "deep_pointer_chain",
@@ -1058,27 +1058,27 @@ func TestExtractPointerHandling(t *testing.T) {
 // TestExtractInterfaceHandling tests handling of interface{} types
 func TestExtractInterfaceHandling(t *testing.T) {
 	// Test with interface{} containing various types
-	interfaceData := map[string]interface{}{
+	interfaceData := map[string]any{
 		"string_val": "hello",
 		"int_val":    42,
 		"float_val":  3.14,
 		"bool_val":   true,
 		"nil_val":    nil,
-		"nested_map": map[string]interface{}{
+		"nested_map": map[string]any{
 			"inner_string": "inner_value",
 			"inner_int":    100,
 		},
-		"nested_slice": []interface{}{
+		"nested_slice": []any{
 			"slice_string",
 			123,
-			map[string]interface{}{
+			map[string]any{
 				"slice_map_key": "slice_map_value",
 			},
 		},
-		"mixed_types": []interface{}{
+		"mixed_types": []any{
 			"string",
 			42,
-			map[string]interface{}{
+			map[string]any{
 				"nested": "value",
 			},
 		},
@@ -1087,7 +1087,7 @@ func TestExtractInterfaceHandling(t *testing.T) {
 	tests := []struct {
 		name     string
 		key      string
-		expected interface{}
+		expected any
 	}{
 		{
 			name:     "interface_string",
@@ -1164,9 +1164,9 @@ func TestExtractInterfaceHandling(t *testing.T) {
 // Benchmark tests for data extraction operations
 
 func BenchmarkExtractMap(b *testing.B) {
-	data := map[string]interface{}{
-		"level1": map[string]interface{}{
-			"level2": map[string]interface{}{
+	data := map[string]any{
+		"level1": map[string]any{
+			"level2": map[string]any{
 				"value": "deep",
 			},
 		},
@@ -1178,10 +1178,10 @@ func BenchmarkExtractMap(b *testing.B) {
 }
 
 func BenchmarkExtractSlice(b *testing.B) {
-	data := []interface{}{
+	data := []any{
 		"first",
 		"second",
-		map[string]interface{}{"key": "value"},
+		map[string]any{"key": "value"},
 	}
 	b.ResetTimer()
 	for b.Loop() {

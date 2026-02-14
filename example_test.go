@@ -71,8 +71,8 @@ func ExampleOrdinalize() {
 }
 
 func ExampleExtract() {
-	data := map[string]interface{}{
-		"user": map[string]interface{}{
+	data := map[string]any{
+		"user": map[string]any{
 			"name": "Alice",
 			"age":  30,
 		},
@@ -83,7 +83,7 @@ func ExampleExtract() {
 }
 
 func ExampleUnique() {
-	result, _ := filter.Unique([]interface{}{1, 2, 2, 3, 3, 3})
+	result, _ := filter.Unique([]any{1, 2, 2, 3, 3, 3})
 	fmt.Println(result)
 	// Output: [1 2 3]
 }

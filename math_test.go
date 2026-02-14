@@ -10,7 +10,7 @@ import (
 func TestAbs(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
+		input       any
 		expected    float64
 		expectError bool
 	}{
@@ -74,8 +74,8 @@ func TestAbs(t *testing.T) {
 func TestAtLeast(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
-		min         interface{}
+		input       any
+		min         any
 		expected    float64
 		expectError bool
 	}{
@@ -167,8 +167,8 @@ func TestAtLeast(t *testing.T) {
 func TestAtMost(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
-		max         interface{}
+		input       any
+		max         any
 		expected    float64
 		expectError bool
 	}{
@@ -260,8 +260,8 @@ func TestAtMost(t *testing.T) {
 func TestRound(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
-		precision   interface{}
+		input       any
+		precision   any
 		expected    float64
 		expectError bool
 	}{
@@ -367,7 +367,7 @@ func TestRound(t *testing.T) {
 func TestFloor(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
+		input       any
 		expected    float64
 		expectError bool
 	}{
@@ -437,7 +437,7 @@ func TestFloor(t *testing.T) {
 func TestCeil(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
+		input       any
 		expected    float64
 		expectError bool
 	}{
@@ -507,8 +507,8 @@ func TestCeil(t *testing.T) {
 func TestPlus(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
-		addend      interface{}
+		input       any
+		addend      any
 		expected    float64
 		expectError bool
 	}{
@@ -600,8 +600,8 @@ func TestPlus(t *testing.T) {
 func TestMinus(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
-		subtrahend  interface{}
+		input       any
+		subtrahend  any
 		expected    float64
 		expectError bool
 	}{
@@ -693,8 +693,8 @@ func TestMinus(t *testing.T) {
 func TestTimes(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
-		multiplier  interface{}
+		input       any
+		multiplier  any
 		expected    float64
 		expectError bool
 	}{
@@ -786,8 +786,8 @@ func TestTimes(t *testing.T) {
 func TestDivide(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
-		divisor     interface{}
+		input       any
+		divisor     any
 		expected    float64
 		expectError bool
 		errorType   error
@@ -884,8 +884,8 @@ func TestDivide(t *testing.T) {
 func TestModulo(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
-		modulus     interface{}
+		input       any
+		modulus     any
 		expected    float64
 		expectError bool
 		errorType   error

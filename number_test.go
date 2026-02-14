@@ -10,7 +10,7 @@ import (
 func TestNumber(t *testing.T) {
 	tests := []struct {
 		name      string
-		input     interface{}
+		input     any
 		format    string
 		expected  string
 		expectErr bool
@@ -75,7 +75,7 @@ func TestNumber(t *testing.T) {
 func TestBytes(t *testing.T) {
 	tests := []struct {
 		name      string
-		input     interface{}
+		input     any
 		expected  string
 		expectErr bool
 	}{

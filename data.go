@@ -28,7 +28,7 @@ import (
 // Returns ErrKeyNotFound if the key path doesn't exist.
 // Returns ErrIndexOutOfRange for invalid array/slice indices.
 // Returns ErrInvalidKeyType for invalid path navigation.
-func Extract(input interface{}, key string) (interface{}, error) {
+func Extract(input any, key string) (any, error) {
 	if input == nil {
 		return nil, ErrUnsupportedType
 	}

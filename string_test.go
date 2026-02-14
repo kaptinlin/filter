@@ -3,6 +3,7 @@ package filter
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -540,13 +541,14 @@ func BenchmarkCamelize(b *testing.B) {
 }
 
 func BenchmarkTruncateWords(b *testing.B) {
-	input := "This is a sample text with many words that we want to truncate at some point to test performance "
+	var input strings.Builder
+	input.WriteString("This is a sample text with many words that we want to truncate at some point to test performance ")
 	for i := range 10 {
-		input += fmt.Sprintf("word%d ", i)
+		input.WriteString(fmt.Sprintf("word%d ", i))
 	}
 	b.ResetTimer()
 	for b.Loop() {
-		_ = TruncateWords(input, 50)
+		_ = TruncateWords(input.String(), 50)
 	}
 }
 

@@ -16,7 +16,7 @@ func TestDate(t *testing.T) {
 	// Define test cases
 	tests := []struct {
 		name      string
-		input     interface{}
+		input     any
 		format    string
 		want      string
 		expectErr bool
@@ -80,7 +80,7 @@ func TestDay(t *testing.T) {
 	// Define test cases
 	tests := []struct {
 		name      string
-		input     interface{}
+		input     any
 		wantDay   int
 		expectErr bool
 	}{
@@ -131,7 +131,7 @@ func TestMonth(t *testing.T) {
 	// Define test cases
 	tests := []struct {
 		name      string
-		input     interface{}
+		input     any
 		wantMonth int
 		expectErr bool
 	}{
@@ -188,7 +188,7 @@ func TestMonthFull(t *testing.T) {
 	// Define test cases
 	tests := []struct {
 		name          string
-		input         interface{}
+		input         any
 		expectedMonth string
 		expectErr     bool
 	}{
@@ -245,7 +245,7 @@ func TestYear(t *testing.T) {
 	// Define test cases
 	tests := []struct {
 		name         string
-		input        interface{}
+		input        any
 		expectedYear int
 		expectErr    bool
 	}{
@@ -302,7 +302,7 @@ func TestWeek(t *testing.T) {
 	// Define test cases
 	tests := []struct {
 		name         string
-		input        interface{}
+		input        any
 		expectedWeek int
 		expectErr    bool
 	}{
@@ -358,7 +358,7 @@ func TestWeek(t *testing.T) {
 func TestWeekday(t *testing.T) {
 	tests := []struct {
 		name            string
-		input           interface{}
+		input           any
 		expectedWeekday string
 		expectErr       bool
 	}{
@@ -419,7 +419,7 @@ func TestTimeAgo(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		input          interface{}
+		input          any
 		expectedOutput string
 		expectErr      bool
 	}{

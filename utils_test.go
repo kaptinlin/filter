@@ -12,7 +12,7 @@ func TestToCarbon(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name    string
-		input   interface{}
+		input   any
 		wantErr bool
 	}{
 		{

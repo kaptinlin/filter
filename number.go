@@ -5,7 +5,7 @@ import (
 )
 
 // Number formats a numeric value according to the specified format string.
-func Number(input interface{}, format string) (string, error) {
+func Number(input any, format string) (string, error) {
 	n, err := toFloat64(input)
 	if err != nil {
 		return "", err
@@ -15,7 +15,7 @@ func Number(input interface{}, format string) (string, error) {
 }
 
 // Bytes formats a numeric value into a human-readable byte format.
-func Bytes(input interface{}) (string, error) {
+func Bytes(input any) (string, error) {
 	n, err := toFloat64(input)
 	if err != nil {
 		return "", err

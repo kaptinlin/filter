@@ -1,7 +1,7 @@
 package filter
 
 // Date formats a timestamp into a specified format. Returns a string representation of the date.
-func Date(input interface{}, format string) (string, error) {
+func Date(input any, format string) (string, error) {
 	carbonTime, err := toCarbon(input)
 	if err != nil {
 		return "", err
@@ -13,7 +13,7 @@ func Date(input interface{}, format string) (string, error) {
 }
 
 // Day extracts and returns the day of the month from the input date.
-func Day(input interface{}) (int, error) {
+func Day(input any) (int, error) {
 	carbonTime, err := toCarbon(input)
 	if err != nil {
 		return 0, err
@@ -22,7 +22,7 @@ func Day(input interface{}) (int, error) {
 }
 
 // Month extracts and returns the month number from the input date.
-func Month(input interface{}) (int, error) {
+func Month(input any) (int, error) {
 	carbonTime, err := toCarbon(input)
 	if err != nil {
 		return 0, err
@@ -31,7 +31,7 @@ func Month(input interface{}) (int, error) {
 }
 
 // MonthFull returns the full month name from the input date.
-func MonthFull(input interface{}) (string, error) {
+func MonthFull(input any) (string, error) {
 	carbonTime, err := toCarbon(input)
 	if err != nil {
 		return "", err
@@ -40,7 +40,7 @@ func MonthFull(input interface{}) (string, error) {
 }
 
 // Year extracts and returns the year from the input date.
-func Year(input interface{}) (int, error) {
+func Year(input any) (int, error) {
 	carbonTime, err := toCarbon(input)
 	if err != nil {
 		return 0, err
@@ -49,7 +49,7 @@ func Year(input interface{}) (int, error) {
 }
 
 // Week returns the ISO week number from the input date.
-func Week(input interface{}) (int, error) {
+func Week(input any) (int, error) {
 	carbonTime, err := toCarbon(input)
 	if err != nil {
 		return 0, err
@@ -58,7 +58,7 @@ func Week(input interface{}) (int, error) {
 }
 
 // Weekday returns the day of the week from the input date.
-func Weekday(input interface{}) (string, error) {
+func Weekday(input any) (string, error) {
 	c, err := toCarbon(input)
 	if err != nil {
 		return "", err
@@ -68,7 +68,7 @@ func Weekday(input interface{}) (string, error) {
 
 // TimeAgo returns a human-readable string representing the time difference
 // between the current time and the input date.
-func TimeAgo(input interface{}) (string, error) {
+func TimeAgo(input any) (string, error) {
 	carbonTime, err := toCarbon(input)
 	if err != nil {
 		return "", err
