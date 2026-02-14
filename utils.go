@@ -8,7 +8,7 @@ import (
 	"github.com/dromara/carbon/v2"
 )
 
-// toCarbon converts an input of type interface{} to a carbon.Carbon object, handling various input types.
+// toCarbon converts input to a carbon.Carbon object, handling various input types.
 func toCarbon(input any) (*carbon.Carbon, error) {
 	switch v := input.(type) {
 	case carbon.Carbon:
@@ -18,17 +18,17 @@ func toCarbon(input any) (*carbon.Carbon, error) {
 	case time.Time:
 		return carbon.CreateFromStdTime(v), nil
 	case string:
-		parsedTime := carbon.Parse(v)
-		if parsedTime.Error != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInvalidTimeFormat, parsedTime.Error) //nolint:errorlint // error info is in message string
+		parsed := carbon.Parse(v)
+		if parsed.Error != nil {
+			return nil, fmt.Errorf("%w: %v", ErrInvalidTimeFormat, parsed.Error) //nolint:errorlint // error info is in message string
 		}
-		return parsedTime, nil
+		return parsed, nil
 	default:
 		return nil, fmt.Errorf("%w: %T", ErrUnsupportedType, input)
 	}
 }
 
-// toFloat64 attempts to convert an interface{} to a float64.
+// toFloat64 converts input to a float64.
 func toFloat64(input any) (float64, error) {
 	switch v := input.(type) {
 	case int:

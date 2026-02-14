@@ -50,7 +50,7 @@ func Extract(input any, key string) (any, error) {
 	return result, nil
 }
 
-// mapJSONPointerError maps jsonpointer library errors to filter package errors
+// mapJSONPointerError maps jsonpointer errors to filter errors.
 func mapJSONPointerError(err error, key string) error {
 	switch {
 	case errors.Is(err, jsonpointer.ErrKeyNotFound):

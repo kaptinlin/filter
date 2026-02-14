@@ -116,10 +116,8 @@ func Shuffle(input any) ([]any, error) {
 		return nil, err
 	}
 
-	// Create a copy to avoid modifying the original
 	result := slices.Clone(slice)
 
-	// Use math/rand/v2 for efficient shuffling
 	rand.Shuffle(len(result), func(i, j int) {
 		result[i], result[j] = result[j], result[i]
 	})
@@ -221,7 +219,7 @@ func Map(input any, key string) ([]any, error) {
 	return result, nil
 }
 
-// toFloat64Slice attempts to convert an interface{} to a slice of float64.
+// toFloat64Slice converts input to a slice of float64.
 func toFloat64Slice(input any) ([]float64, error) {
 	slice, err := toSlice(input)
 	if err != nil {
@@ -239,20 +237,19 @@ func toFloat64Slice(input any) ([]float64, error) {
 	return result, nil
 }
 
-// toSlice attempts to convert an interface{} to a slice of interface{}.
+// toSlice converts input to a slice of any.
 func toSlice(input any) ([]any, error) {
-	valRef := reflect.ValueOf(input)
-	kind := valRef.Kind()
+	v := reflect.ValueOf(input)
+	kind := v.Kind()
 
-	// Support both slice and array types
 	if kind != reflect.Slice && kind != reflect.Array {
 		return nil, ErrNotSlice
 	}
 
-	length := valRef.Len()
+	length := v.Len()
 	result := make([]any, length)
 	for i := range length {
-		result[i] = valRef.Index(i).Interface()
+		result[i] = v.Index(i).Interface()
 	}
 	return result, nil
 }

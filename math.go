@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-// Abs calculates the absolute value of the input.
+// Abs returns the absolute value of the input.
 func Abs(input any) (float64, error) {
 	val, err := toFloat64(input)
 	if err != nil {
@@ -13,131 +13,131 @@ func Abs(input any) (float64, error) {
 	return math.Abs(val), nil
 }
 
-// AtLeast ensures the input is at least as large as the minimum value.
+// AtLeast returns the larger of input and minimum.
 func AtLeast(input, minimum any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	val, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	minVal, err := toFloat64(minimum)
+	min, err := toFloat64(minimum)
 	if err != nil {
 		return 0, err
 	}
-	return max(inputVal, minVal), nil
+	return max(val, min), nil
 }
 
-// AtMost ensures the input is no larger than the maximum value.
+// AtMost returns the smaller of input and maximum.
 func AtMost(input, maximum any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	val, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	maxVal, err := toFloat64(maximum)
+	max, err := toFloat64(maximum)
 	if err != nil {
 		return 0, err
 	}
-	return min(inputVal, maxVal), nil
+	return min(val, max), nil
 }
 
 // Round rounds the input to the specified number of decimal places.
 func Round(input, precision any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	val, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	precisionVal, err := toFloat64(precision)
+	prec, err := toFloat64(precision)
 	if err != nil {
 		return 0, err
 	}
-	multiplier := math.Pow(10, precisionVal)
-	return math.Round(inputVal*multiplier) / multiplier, nil
+	multiplier := math.Pow(10, prec)
+	return math.Round(val*multiplier) / multiplier, nil
 }
 
 // Floor rounds the input down to the nearest whole number.
 func Floor(input any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	val, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	return math.Floor(inputVal), nil
+	return math.Floor(val), nil
 }
 
 // Ceil rounds the input up to the nearest whole number.
 func Ceil(input any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	val, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	return math.Ceil(inputVal), nil
+	return math.Ceil(val), nil
 }
 
 // Plus adds two numbers.
 func Plus(input, addend any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	a, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	addendVal, err := toFloat64(addend)
+	b, err := toFloat64(addend)
 	if err != nil {
 		return 0, err
 	}
-	return inputVal + addendVal, nil
+	return a + b, nil
 }
 
 // Minus subtracts the second value from the first.
 func Minus(input, subtrahend any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	a, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	subtrahendVal, err := toFloat64(subtrahend)
+	b, err := toFloat64(subtrahend)
 	if err != nil {
 		return 0, err
 	}
-	return inputVal - subtrahendVal, nil
+	return a - b, nil
 }
 
 // Times multiplies the first value by the second.
 func Times(input, multiplier any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	a, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	multiplierVal, err := toFloat64(multiplier)
+	b, err := toFloat64(multiplier)
 	if err != nil {
 		return 0, err
 	}
-	return inputVal * multiplierVal, nil
+	return a * b, nil
 }
 
-// Divide divides the first value by the second, including error handling for division by zero.
+// Divide divides the first value by the second.
 func Divide(input, divisor any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	a, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	divisorVal, err := toFloat64(divisor)
+	b, err := toFloat64(divisor)
 	if err != nil {
 		return 0, err
 	}
-	if divisorVal == 0 {
+	if b == 0 {
 		return 0, ErrDivisionByZero
 	}
-	return inputVal / divisorVal, nil
+	return a / b, nil
 }
 
 // Modulo returns the remainder of the division of the first value by the second.
 func Modulo(input, modulus any) (float64, error) {
-	inputVal, err := toFloat64(input)
+	a, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	modulusVal, err := toFloat64(modulus)
+	b, err := toFloat64(modulus)
 	if err != nil {
 		return 0, err
 	}
-	if modulusVal == 0 {
+	if b == 0 {
 		return 0, ErrModulusByZero
 	}
-	return math.Mod(inputVal, modulusVal), nil
+	return math.Mod(a, b), nil
 }

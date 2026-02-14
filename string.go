@@ -205,7 +205,6 @@ func Ordinalize(number int) string {
 	suffix := "th"
 	switch number % 100 {
 	case 11, 12, 13:
-		// Teen numbers always use "th" suffix (11th, 12th, 13th)
 	default:
 		switch number % 10 {
 		case 1:
@@ -258,7 +257,6 @@ func TruncateWords(input string, maxWords int) string {
 	}
 
 	for _, r := range input {
-		// Check if the character is a space or punctuation, treating them as word boundaries.
 		if unicode.IsSpace(r) || unicode.IsPunct(r) {
 			buf.WriteRune(r)
 			appendWord()
@@ -266,7 +264,6 @@ func TruncateWords(input string, maxWords int) string {
 			buf.WriteRune(r)
 		}
 	}
-	// Append any final word in the buffer.
 	appendWord()
 
 	if len(words) <= maxWords {
@@ -285,8 +282,7 @@ func isSpace(c rune, spaces []rune) bool {
 	return slices.Contains(spaces, c) || unicode.IsSpace(c)
 }
 
-// appendPart appends parts of a string to a slice after trimming
-// spaces and matching with base acronyms.
+// appendPart appends parts of a string to a slice after trimming spaces.
 func appendPart(a []string, spaces []rune, ss ...string) []string {
 	for _, s := range ss {
 		s = strings.TrimSpace(s)
@@ -303,14 +299,7 @@ func appendPart(a []string, spaces []rune, ss ...string) []string {
 	return a
 }
 
-// toParts splits a string into identifiable parts, considering acronyms and separators.
-//
-// It scans runes sequentially, checking at each rune:
-//  1. Is it a separator character? If so, flush the current buffer as a part.
-//  2. Is it an uppercase letter following a non-uppercase letter? If splitOnUpperCase
-//     is true, this signals a camelCase boundary (e.g., "helloWorld" -> ["hello", "World"]).
-//  3. Does the current buffer match a known acronym? If so, flush it as a separate part
-//     to prevent merging acronyms with adjacent words (e.g., "HTMLParser" -> ["HTML", "Parser"]).
+// toParts splits a string into parts, considering acronyms and separators.
 func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 	parts := []string{}
 	s = strings.TrimSpace(s)
@@ -336,7 +325,6 @@ func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 			continue
 		}
 
-		// Split on camelCase boundary: uppercase after non-uppercase
 		if splitOnUpperCase && unicode.IsUpper(c) && !unicode.IsUpper(prev) && x.Len() > 0 {
 			parts = appendPart(parts, spaces, x.String())
 			x.Reset()
@@ -363,8 +351,7 @@ func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 	return parts
 }
 
-// formatPluralizeWithCount formats the pluralization result string
-// with the count if necessary.
+// formatPluralizeWithCount formats the pluralization result with count if needed.
 func formatPluralizeWithCount(count int, result string) string {
 	if strings.Contains(result, "%d") {
 		return fmt.Sprintf(result, count)
