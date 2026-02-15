@@ -191,11 +191,7 @@ func Average(input any) (float64, error) {
 		return 0, ErrEmptySlice
 	}
 
-	var sum float64
-	for _, val := range slice {
-		sum += val
-	}
-
+	sum, _ := Sum(input)
 	return sum / float64(len(slice)), nil
 }
 

@@ -122,17 +122,18 @@ func Camelize(input string) string {
 		tempBuilder := strings.Builder{}
 		capped := false
 		for _, c := range part {
-			if unicode.IsLetter(c) || unicode.IsDigit(c) {
-				if i == 0 && !capped {
+			if !unicode.IsLetter(c) && !unicode.IsDigit(c) {
+				continue
+			}
+
+			if !capped {
+				if i == 0 {
 					tempBuilder.WriteRune(unicode.ToLower(c))
-					capped = true
-					continue
-				}
-				if !capped {
-					capped = true
+				} else {
 					tempBuilder.WriteRune(unicode.ToUpper(c))
-					continue
 				}
+				capped = true
+			} else {
 				tempBuilder.WriteRune(c)
 			}
 		}

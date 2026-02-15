@@ -66,21 +66,11 @@ func mapJSONPointerError(err error, key string) error {
 	case errors.Is(err, jsonpointer.ErrNilPointer):
 		return fmt.Errorf("%w: cannot navigate through nil pointer '%s'", ErrInvalidKeyType, key)
 	case errors.Is(err, jsonpointer.ErrNotFound):
-		// For "not found" errors, check if it's trying to navigate into a primitive
-		if isPrimitiveNavigationError(key) {
+		if strings.Contains(key, ".") {
 			return fmt.Errorf("%w: cannot navigate into primitive value", ErrInvalidKeyType)
 		}
 		return fmt.Errorf("%w: '%s'", ErrKeyNotFound, key)
 	default:
-		// For unknown errors, map to invalid key type
 		return fmt.Errorf("%w: %v", ErrInvalidKeyType, err) //nolint:errorlint // intentionally using %v to avoid leaking internal jsonpointer errors
 	}
-}
-
-// isPrimitiveNavigationError checks if the error is due to trying to navigate into a primitive value
-func isPrimitiveNavigationError(key string) bool {
-	// This is a heuristic: if the key has more than one part and the error is "not found",
-	// it's likely trying to navigate into a primitive value
-	parts := strings.Split(key, ".")
-	return len(parts) > 1
 }

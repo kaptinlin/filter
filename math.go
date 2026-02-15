@@ -19,11 +19,11 @@ func AtLeast(input, minimum any) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	min, err := toFloat64(minimum)
+	minVal, err := toFloat64(minimum)
 	if err != nil {
 		return 0, err
 	}
-	return max(val, min), nil
+	return max(val, minVal), nil
 }
 
 // AtMost returns the smaller of input and maximum.
@@ -32,11 +32,11 @@ func AtMost(input, maximum any) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	max, err := toFloat64(maximum)
+	maxVal, err := toFloat64(maximum)
 	if err != nil {
 		return 0, err
 	}
-	return min(val, max), nil
+	return min(val, maxVal), nil
 }
 
 // Round rounds the input to the specified number of decimal places.
@@ -71,73 +71,56 @@ func Ceil(input any) (float64, error) {
 	return math.Ceil(val), nil
 }
 
+// binaryOp is a helper for binary arithmetic operations.
+func binaryOp(a, b any, op func(float64, float64) (float64, error)) (float64, error) {
+	x, err := toFloat64(a)
+	if err != nil {
+		return 0, err
+	}
+	y, err := toFloat64(b)
+	if err != nil {
+		return 0, err
+	}
+	return op(x, y)
+}
+
 // Plus adds two numbers.
 func Plus(input, addend any) (float64, error) {
-	a, err := toFloat64(input)
-	if err != nil {
-		return 0, err
-	}
-	b, err := toFloat64(addend)
-	if err != nil {
-		return 0, err
-	}
-	return a + b, nil
+	return binaryOp(input, addend, func(a, b float64) (float64, error) {
+		return a + b, nil
+	})
 }
 
 // Minus subtracts the second value from the first.
 func Minus(input, subtrahend any) (float64, error) {
-	a, err := toFloat64(input)
-	if err != nil {
-		return 0, err
-	}
-	b, err := toFloat64(subtrahend)
-	if err != nil {
-		return 0, err
-	}
-	return a - b, nil
+	return binaryOp(input, subtrahend, func(a, b float64) (float64, error) {
+		return a - b, nil
+	})
 }
 
 // Times multiplies the first value by the second.
 func Times(input, multiplier any) (float64, error) {
-	a, err := toFloat64(input)
-	if err != nil {
-		return 0, err
-	}
-	b, err := toFloat64(multiplier)
-	if err != nil {
-		return 0, err
-	}
-	return a * b, nil
+	return binaryOp(input, multiplier, func(a, b float64) (float64, error) {
+		return a * b, nil
+	})
 }
 
 // Divide divides the first value by the second.
 func Divide(input, divisor any) (float64, error) {
-	a, err := toFloat64(input)
-	if err != nil {
-		return 0, err
-	}
-	b, err := toFloat64(divisor)
-	if err != nil {
-		return 0, err
-	}
-	if b == 0 {
-		return 0, ErrDivisionByZero
-	}
-	return a / b, nil
+	return binaryOp(input, divisor, func(a, b float64) (float64, error) {
+		if b == 0 {
+			return 0, ErrDivisionByZero
+		}
+		return a / b, nil
+	})
 }
 
 // Modulo returns the remainder of the division of the first value by the second.
 func Modulo(input, modulus any) (float64, error) {
-	a, err := toFloat64(input)
-	if err != nil {
-		return 0, err
-	}
-	b, err := toFloat64(modulus)
-	if err != nil {
-		return 0, err
-	}
-	if b == 0 {
-		return 0, ErrModulusByZero
-	}
-	return math.Mod(a, b), nil
+	return binaryOp(input, modulus, func(a, b float64) (float64, error) {
+		if b == 0 {
+			return 0, ErrModulusByZero
+		}
+		return math.Mod(a, b), nil
+	})
 }
