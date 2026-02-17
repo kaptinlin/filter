@@ -54,23 +54,23 @@ func Extract(input any, key string) (any, error) {
 func mapJSONPointerError(err error, key string) error {
 	switch {
 	case errors.Is(err, jsonpointer.ErrKeyNotFound):
-		return fmt.Errorf("%w: '%s'", ErrKeyNotFound, key)
+		return fmt.Errorf("%w: %s", ErrKeyNotFound, key)
 	case errors.Is(err, jsonpointer.ErrFieldNotFound):
-		return fmt.Errorf("%w: '%s'", ErrKeyNotFound, key)
+		return fmt.Errorf("%w: %s", ErrKeyNotFound, key)
 	case errors.Is(err, jsonpointer.ErrIndexOutOfBounds):
-		return fmt.Errorf("%w: '%s'", ErrIndexOutOfRange, key)
+		return fmt.Errorf("%w: %s", ErrIndexOutOfRange, key)
 	case errors.Is(err, jsonpointer.ErrInvalidIndex):
-		return fmt.Errorf("%w: '%s'", ErrInvalidKeyType, key)
+		return fmt.Errorf("%w: %s", ErrInvalidKeyType, key)
 	case errors.Is(err, jsonpointer.ErrInvalidPathStep):
-		return fmt.Errorf("%w: '%s'", ErrInvalidKeyType, key)
+		return fmt.Errorf("%w: %s", ErrInvalidKeyType, key)
 	case errors.Is(err, jsonpointer.ErrNilPointer):
-		return fmt.Errorf("%w: cannot navigate through nil pointer '%s'", ErrInvalidKeyType, key)
+		return fmt.Errorf("%w: cannot navigate through nil pointer in %s", ErrInvalidKeyType, key)
 	case errors.Is(err, jsonpointer.ErrNotFound):
 		if strings.Contains(key, ".") {
-			return fmt.Errorf("%w: cannot navigate into primitive value", ErrInvalidKeyType)
+			return ErrInvalidKeyType
 		}
-		return fmt.Errorf("%w: '%s'", ErrKeyNotFound, key)
+		return fmt.Errorf("%w: %s", ErrKeyNotFound, key)
 	default:
-		return fmt.Errorf("%w: %v", ErrInvalidKeyType, err) //nolint:errorlint // intentionally using %v to avoid leaking internal jsonpointer errors
+		return fmt.Errorf("%w: %w", ErrInvalidKeyType, err)
 	}
 }

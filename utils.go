@@ -20,7 +20,7 @@ func toCarbon(input any) (*carbon.Carbon, error) {
 	case string:
 		parsed := carbon.Parse(v)
 		if parsed.Error != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInvalidTimeFormat, parsed.Error) //nolint:errorlint // error info is in message string
+			return nil, fmt.Errorf("%w: %w", ErrInvalidTimeFormat, parsed.Error)
 		}
 		return parsed, nil
 	default:
@@ -56,7 +56,11 @@ func toFloat64(input any) (float64, error) {
 	case float64:
 		return v, nil
 	case string:
-		return strconv.ParseFloat(v, 64)
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return 0, fmt.Errorf("%w: %w", ErrNotNumeric, err)
+		}
+		return f, nil
 	default:
 		return 0, fmt.Errorf("%w: got %T", ErrNotNumeric, input)
 	}

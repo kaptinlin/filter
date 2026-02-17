@@ -239,7 +239,7 @@ func TruncateWords(input string, maxWords int) string {
 		return ""
 	}
 
-	words := []string{}
+	var words []string
 	buf := strings.Builder{}
 
 	appendWord := func() {
