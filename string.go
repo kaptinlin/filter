@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"strconv"
@@ -16,10 +17,7 @@ var defaultSpaceRunes = []rune{'_', ' ', ':', '-', '/'}
 
 // Default sets a default value for an empty string.
 func Default(input, defaultValue string) string {
-	if input == "" {
-		return defaultValue
-	}
-	return input
+	return cmp.Or(input, defaultValue)
 }
 
 // Trim strips leading and trailing whitespace from a string.
