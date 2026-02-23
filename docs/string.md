@@ -389,28 +389,28 @@ result, _ = filter.Slice([]any{1, 2, 3, 4}, 1, 2)
 fmt.Println(result) // Outputs: [2 3]
 ```
 
-### UrlEncode
+### URLEncode
 
 Percent-encodes a string for use in URLs.
 
 **Example:**
 
 ```go
-result := filter.UrlEncode("hello world")
+result := filter.URLEncode("hello world")
 fmt.Println(result) // Outputs: "hello+world"
 
-result = filter.UrlEncode("foo@bar.com")
+result = filter.URLEncode("foo@bar.com")
 fmt.Println(result) // Outputs: "foo%40bar.com"
 ```
 
-### UrlDecode
+### URLDecode
 
 Decodes a percent-encoded string.
 
 **Example:**
 
 ```go
-result, _ := filter.UrlDecode("hello+world")
+result, _ := filter.URLDecode("hello+world")
 fmt.Println(result) // Outputs: "hello world"
 ```
 

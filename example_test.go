@@ -146,8 +146,8 @@ func ExampleReplaceLast() {
 	// Output: hello hello hi
 }
 
-func ExampleUrlEncode() {
-	fmt.Println(filter.UrlEncode("hello world"))
+func ExampleURLEncode() {
+	fmt.Println(filter.URLEncode("hello world"))
 	// Output: hello+world
 }
 

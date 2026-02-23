@@ -450,13 +450,13 @@ func sliceReflect(rv reflect.Value, offset int, length ...int) []any {
 	return result
 }
 
-// UrlEncode percent-encodes a string for use in URLs.
-func UrlEncode(input string) string {
+// URLEncode percent-encodes a string for use in URLs.
+func URLEncode(input string) string {
 	return url.QueryEscape(input)
 }
 
-// UrlDecode decodes a percent-encoded string.
-func UrlDecode(input string) (string, error) {
+// URLDecode decodes a percent-encoded string.
+func URLDecode(input string) (string, error) {
 	result, err := url.QueryUnescape(input)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrInvalidArguments, err)

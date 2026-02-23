@@ -775,7 +775,7 @@ func TestSlice(t *testing.T) {
 	}
 }
 
-func TestUrlEncode(t *testing.T) {
+func TestURLEncode(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected string
@@ -787,12 +787,12 @@ func TestUrlEncode(t *testing.T) {
 		{"nospace", "nospace"},
 	}
 	for _, tt := range tests {
-		result := UrlEncode(tt.input)
+		result := URLEncode(tt.input)
 		require.Equal(t, tt.expected, result)
 	}
 }
 
-func TestUrlDecode(t *testing.T) {
+func TestURLDecode(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected string
@@ -805,7 +805,7 @@ func TestUrlDecode(t *testing.T) {
 		{"%ZZ", "", true},
 	}
 	for _, tt := range tests {
-		result, err := UrlDecode(tt.input)
+		result, err := URLDecode(tt.input)
 		if tt.wantErr {
 			require.Error(t, err)
 		} else {
