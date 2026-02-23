@@ -79,8 +79,8 @@ func main() {
 | [`StripHTML`](docs/string.md#striphtml) | Removes HTML tags, scripts, styles, and comments. |
 | [`StripNewlines`](docs/string.md#stripnewlines) | Removes all newline characters. |
 | [`Slice`](docs/string.md#slice) | Extracts a substring or sub-slice with negative offset support. |
-| [`UrlEncode`](docs/string.md#urlencode) | Percent-encodes a string for URLs. |
-| [`UrlDecode`](docs/string.md#urldecode) | Decodes a percent-encoded string. |
+| [`URLEncode`](docs/string.md#urlencode) | Percent-encodes a string for URLs. |
+| [`URLDecode`](docs/string.md#urldecode) | Decodes a percent-encoded string. |
 | [`Base64Encode`](docs/string.md#base64encode) | Encodes a string to standard Base64. |
 | [`Base64Decode`](docs/string.md#base64decode) | Decodes a standard Base64 string. |
 
