@@ -12,25 +12,30 @@ import (
 func TestDefault(t *testing.T) {
 	tests := []struct {
 		name         string
-		input        string
-		defaultValue string
-		expected     string
+		input        any
+		defaultValue any
+		expected     any
 	}{
-		{"Empty Input", "", "default value", "default value"},
-		{"Non-Empty Input", "actual value", "default value", "actual value"},
+		{"Empty string Input", "", "default value", "default value"},
+		{"Non-Empty string Input", "actual value", "default value", "actual value"},
 		{"Empty Default Value", "", "", ""},
 		{"Non-Empty Input With Empty Default", "actual value", "", "actual value"},
-		{"Both Empty", "", "", ""},
-		{"Numerical Input and Default", "123", "456", "123"},
-		{"Numerical Empty Input", "", "456", "456"},
+		{"Both Empty strings", "", "", ""},
+		{"String number Input and Default", "123", "456", "123"},
+		{"Empty string with number Default", "", 456, 456},
+		{"Nil Input", nil, "fallback", "fallback"},
+		{"False Input", false, "fallback", "fallback"},
+		{"True Input", true, "fallback", true},
+		{"Zero int (not falsy)", 0, "fallback", 0},
+		{"Non-nil non-empty", 42, "fallback", 42},
+		{"Nil with nil default", nil, nil, nil},
+		{"Slice input", []int{1, 2}, "fallback", []int{1, 2}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			actual := Default(tt.input, tt.defaultValue)
-			if actual != tt.expected {
-				t.Errorf("Test '%s' failed. Expected '%s', got '%s'", tt.name, tt.expected, actual)
-			}
+			require.Equal(t, tt.expected, actual)
 		})
 	}
 }
@@ -303,8 +308,8 @@ func TestCapitalize(t *testing.T) {
 		{"Single lowercase character", "x", "X"},
 		{"Single uppercase character", "X", "X"},
 		{"Lowercase", "capitalize", "Capitalize"},
-		{"Uppercase all", "CAPITALIZE", "CAPITALIZE"},
-		{"Mixed case", "cAPITALIZE", "CAPITALIZE"},
+		{"Uppercase all", "CAPITALIZE", "Capitalize"},
+		{"Mixed case", "cAPITALIZE", "Capitalize"},
 		{"Numbers leading", "123start", "123start"},
 		{"Special characters leading", "*special", "*special"},
 		{"Whitespace leading", " capitalize", " capitalize"},
@@ -477,23 +482,31 @@ func TestTruncate(t *testing.T) {
 		name       string
 		input      string
 		maxLength  int
+		ellipsis   []string
 		wantOutput string
 	}{
-		{"Shorter String", "Hello", 10, "Hello"},
-		{"Equal Length String", "Hello", 5, "Hello"},
-		{"Longer String", "Hello, world!", 5, "Hello..."},
-		{"Exact Boundary With Space", "Hello world", 5, "Hello..."},
-		{"Multibyte Characters", "Hello, 世界", 8, "Hello, 世..."},
-		{"Emoji Characters", "😊😊😊😊", 2, "😊😊..."},
-		{"Zero MaxLength", "Hello", 0, ""},
-		{"Negative MaxLength", "Hello", -1, ""},
-		{"MaxLength One", "Hello", 1, "H..."},
+		{"Shorter String", "Hello", 10, nil, "Hello"},
+		{"Equal Length String", "Hello", 5, nil, "Hello"},
+		{"Longer String", "Hello, world!", 8, nil, "Hello..."},
+		{"Exact Boundary With Space", "Hello world", 8, nil, "Hello..."},
+		{"Multibyte Characters", "Hello, 世界", 8, nil, "Hello..."},
+		{"Emoji Characters", "😊😊😊😊😊😊", 5, nil, "😊😊..."},
+		{"Zero MaxLength", "Hello", 0, nil, ""},
+		{"Negative MaxLength", "Hello", -1, nil, ""},
+		{"MaxLength One", "Hello", 1, nil, "."},
+		{"MaxLength Two", "Hello", 2, nil, ".."},
+		{"MaxLength Three", "Hello", 3, nil, "..."},
+		{"MaxLength Four", "Hello", 4, nil, "H..."},
+		{"Custom Ellipsis", "Hello, world!", 8, []string{"--"}, "Hello,--"},
+		{"Empty Ellipsis", "Hello, world!", 5, []string{""}, "Hello"},
+		{"Single Char Ellipsis", "Hello, world!", 6, []string{"…"}, "Hello…"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotOutput := Truncate(tt.input, tt.maxLength); gotOutput != tt.wantOutput {
-				t.Errorf("Truncate(%q, %d) = %q, want %q", tt.input, tt.maxLength, gotOutput, tt.wantOutput)
+			gotOutput := Truncate(tt.input, tt.maxLength, tt.ellipsis...)
+			if gotOutput != tt.wantOutput {
+				t.Errorf("Truncate(%q, %d, %v) = %q, want %q", tt.input, tt.maxLength, tt.ellipsis, gotOutput, tt.wantOutput)
 			}
 		})
 	}
@@ -504,30 +517,338 @@ func TestTruncateWords(t *testing.T) {
 		name       string
 		input      string
 		maxWords   int
+		ellipsis   []string
 		wantOutput string
 	}{
-		{"Shorter String", "Hello world", 3, "Hello world"},
-		{"Equal Length String", "Hello world", 2, "Hello world"},
-		{"Longer String", "Hello beautiful world", 2, "Hello beautiful..."},
-		{"Empty String", "", 2, ""},
-		{"Only Spaces", "    ", 2, "    "},
-		{"Zero MaxWords", "Hello world", 0, ""},
-		{"Negative MaxWords", "Hello world", -1, ""},
-		{"One Word Input", "Hello", 1, "Hello"},
-		{"MaxWords One", "Hello world", 1, "Hello..."},
-		{"Punctuation Handling", "Hello, world! How are you?", 3, "Hello, world! How..."},
-		{"Long String", "This is a longer string with many words", 5, "This is a longer string..."},
-		{"Emoji Characters", "🌟✨🌟 Sparkling stars", 2, "🌟✨🌟 Sparkling..."},
-		{"Multibyte Characters", "你好，世界 Hello world", 3, "你好，世界 Hello..."},
-		{"Mixed Emoji Words", "😊 World 🌍 is beautiful 🏞️", 3, "😊 World 🌍..."},
+		{"Shorter String", "Hello world", 3, nil, "Hello world"},
+		{"Equal Length String", "Hello world", 2, nil, "Hello world"},
+		{"Longer String", "Hello beautiful world", 2, nil, "Hello beautiful..."},
+		{"Empty String", "", 2, nil, ""},
+		{"Only Spaces", "    ", 2, nil, "    "},
+		{"Zero MaxWords", "Hello world", 0, nil, ""},
+		{"Negative MaxWords", "Hello world", -1, nil, ""},
+		{"One Word Input", "Hello", 1, nil, "Hello"},
+		{"MaxWords One", "Hello world", 1, nil, "Hello..."},
+		{"Punctuation Handling", "Hello, world! How are you?", 3, nil, "Hello, world! How..."},
+		{"Long String", "This is a longer string with many words", 5, nil, "This is a longer string..."},
+		{"Emoji Characters", "🌟✨🌟 Sparkling stars", 2, nil, "🌟✨🌟 Sparkling..."},
+		{"Multibyte Characters", "你好，世界 Hello world", 3, nil, "你好，世界 Hello..."},
+		{"Mixed Emoji Words", "😊 World 🌍 is beautiful 🏞️", 3, nil, "😊 World 🌍..."},
+		{"Custom Ellipsis", "Hello beautiful world", 2, []string{"--"}, "Hello beautiful--"},
+		{"Empty Ellipsis", "Hello beautiful world", 2, []string{""}, "Hello beautiful"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotOutput := TruncateWords(tt.input, tt.maxWords); gotOutput != tt.wantOutput {
-				t.Errorf("TruncateWords(%q, %d) = %q, want %q", tt.input, tt.maxWords, gotOutput, tt.wantOutput)
+			gotOutput := TruncateWords(tt.input, tt.maxWords, tt.ellipsis...)
+			if gotOutput != tt.wantOutput {
+				t.Errorf("TruncateWords(%q, %d, %v) = %q, want %q", tt.input, tt.maxWords, tt.ellipsis, gotOutput, tt.wantOutput)
 			}
 		})
+	}
+}
+
+func TestEscape(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"HTML tags", "<p>test</p>", "&lt;p&gt;test&lt;/p&gt;"},
+		{"Quotes and ampersand", `"hello" & 'world'`, `&#34;hello&#34; &amp; &#39;world&#39;`},
+		{"No special chars", "no special chars", "no special chars"},
+		{"Empty", "", ""},
+		{"Already escaped gets double escaped", "already &amp; escaped", "already &amp;amp; escaped"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Escape(tt.input)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestEscapeOnce(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"Already escaped", "&lt;p&gt;test&lt;/p&gt;", "&lt;p&gt;test&lt;/p&gt;"},
+		{"Unescaped", "1 < 2 & 3", "1 &lt; 2 &amp; 3"},
+		{"Mixed", "&amp; & &lt;", "&amp; &amp; &lt;"},
+		{"Quotes", `"hello" & 'world'`, `&#34;hello&#34; &amp; &#39;world&#39;`},
+		{"Empty", "", ""},
+		{"No special chars", "hello world", "hello world"},
+		{"Numeric entity", "&#39;test&#39;", "&#39;test&#39;"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := EscapeOnce(tt.input)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestStripHTML(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"Simple tags", "<p>hello</p>", "hello"},
+		{"Nested tags", "<div><p>hello</p></div>", "hello"},
+		{"Script block", "before<script>alert('x')</script>after", "beforeafter"},
+		{"Style block", "before<style>.x{color:red}</style>after", "beforeafter"},
+		{"Comment", "before<!-- comment -->after", "beforeafter"},
+		{"Self-closing", "hello<br/>world", "helloworld"},
+		{"No HTML", "plain text", "plain text"},
+		{"Empty", "", ""},
+		{"Attributes", `<a href="url">link</a>`, "link"},
+		{"Multiline script", "a<script>\nalert('x')\n</script>b", "ab"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := StripHTML(tt.input)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestStripNewlines(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello\nworld", "helloworld"},
+		{"hello\r\nworld", "helloworld"},
+		{"hello\rworld", "helloworld"},
+		{"\n\n\n", ""},
+		{"no newlines", "no newlines"},
+		{"", ""},
+		{"mixed\n\r\n\r", "mixed"},
+	}
+	for _, tt := range tests {
+		result := StripNewlines(tt.input)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestTrimLeft(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"  hello  ", "hello  "},
+		{"\t\nhello", "hello"},
+		{"hello", "hello"},
+		{"   ", ""},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		result := TrimLeft(tt.input)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestTrimRight(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"  hello  ", "  hello"},
+		{"hello\t\n", "hello"},
+		{"hello", "hello"},
+		{"   ", ""},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		result := TrimRight(tt.input)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestReplaceFirst(t *testing.T) {
+	tests := []struct {
+		input       string
+		old         string
+		replacement string
+		expected    string
+	}{
+		{"hello hello hello", "hello", "hi", "hi hello hello"},
+		{"abcabc", "abc", "xyz", "xyzabc"},
+		{"no match", "xyz", "abc", "no match"},
+		{"hello", "", "world", "hello"},
+		{"", "a", "b", ""},
+	}
+	for _, tt := range tests {
+		result := ReplaceFirst(tt.input, tt.old, tt.replacement)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestReplaceLast(t *testing.T) {
+	tests := []struct {
+		input       string
+		old         string
+		replacement string
+		expected    string
+	}{
+		{"hello hello hello", "hello", "hi", "hello hello hi"},
+		{"abcabc", "abc", "xyz", "abcxyz"},
+		{"no match", "xyz", "abc", "no match"},
+		{"hello", "", "world", "hello"},
+		{"", "a", "b", ""},
+	}
+	for _, tt := range tests {
+		result := ReplaceLast(tt.input, tt.old, tt.replacement)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestRemoveFirst(t *testing.T) {
+	tests := []struct {
+		input    string
+		toRemove string
+		expected string
+	}{
+		{"hello hello hello", "hello ", "hello hello"},
+		{"abcabc", "abc", "abc"},
+		{"no match", "xyz", "no match"},
+		{"hello", "", "hello"},
+	}
+	for _, tt := range tests {
+		result := RemoveFirst(tt.input, tt.toRemove)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestRemoveLast(t *testing.T) {
+	tests := []struct {
+		input    string
+		toRemove string
+		expected string
+	}{
+		{"hello hello hello", " hello", "hello hello"},
+		{"abcabc", "abc", "abc"},
+		{"no match", "xyz", "no match"},
+		{"hello", "", "hello"},
+	}
+	for _, tt := range tests {
+		result := RemoveLast(tt.input, tt.toRemove)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestSlice(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    any
+		offset   int
+		length   []int
+		expected any
+		wantErr  bool
+	}{
+		{"String single char", "hello", 1, nil, "e", false},
+		{"String with length", "hello", 1, []int{3}, "ell", false},
+		{"String negative offset", "hello", -3, []int{2}, "ll", false},
+		{"String out of bounds", "hello", 10, nil, "", false},
+		{"String negative out of bounds", "hello", -10, nil, "", false},
+		{"String empty", "", 0, nil, "", false},
+		{"String UTF-8", "こんにちは", 1, []int{2}, "んに", false},
+		{"Slice single element", []any{1, 2, 3, 4}, 1, nil, []any{2}, false},
+		{"Slice with length", []any{1, 2, 3, 4}, 1, []int{2}, []any{2, 3}, false},
+		{"Slice negative offset", []any{1, 2, 3, 4}, -2, []int{2}, []any{3, 4}, false},
+		{"Slice out of bounds", []any{1, 2, 3}, 10, nil, []any{}, false},
+		{"Invalid type", 123, 0, nil, nil, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := Slice(tt.input, tt.offset, tt.length...)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestUrlEncode(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello world", "hello+world"},
+		{"foo@bar.com", "foo%40bar.com"},
+		{"a=1&b=2", "a%3D1%26b%3D2"},
+		{"", ""},
+		{"nospace", "nospace"},
+	}
+	for _, tt := range tests {
+		result := UrlEncode(tt.input)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestUrlDecode(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+		wantErr  bool
+	}{
+		{"hello+world", "hello world", false},
+		{"foo%40bar.com", "foo@bar.com", false},
+		{"a%3D1%26b%3D2", "a=1&b=2", false},
+		{"", "", false},
+		{"%ZZ", "", true},
+	}
+	for _, tt := range tests {
+		result, err := UrlDecode(tt.input)
+		if tt.wantErr {
+			require.Error(t, err)
+		} else {
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, result)
+		}
+	}
+}
+
+func TestBase64Encode(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello world", "aGVsbG8gd29ybGQ="},
+		{"", ""},
+		{"a", "YQ=="},
+	}
+	for _, tt := range tests {
+		result := Base64Encode(tt.input)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestBase64Decode(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+		wantErr  bool
+	}{
+		{"aGVsbG8gd29ybGQ=", "hello world", false},
+		{"", "", false},
+		{"YQ==", "a", false},
+		{"invalid!base64", "", true},
+	}
+	for _, tt := range tests {
+		result, err := Base64Decode(tt.input)
+		if tt.wantErr {
+			require.Error(t, err)
+		} else {
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, result)
+		}
 	}
 }
 

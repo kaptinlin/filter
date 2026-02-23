@@ -857,6 +857,482 @@ func TestMap(t *testing.T) {
 	}
 }
 
+func TestSort(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   any
+		key     []string
+		want    []any
+		wantErr bool
+	}{
+		{
+			name:  "Sort strings",
+			input: []any{"banana", "apple", "cherry"},
+			want:  []any{"apple", "banana", "cherry"},
+		},
+		{
+			name:  "Sort numbers",
+			input: []any{3.0, 1.0, 2.0},
+			want:  []any{1.0, 2.0, 3.0},
+		},
+		{
+			name: "Sort by key",
+			input: []any{
+				map[string]any{"name": "Charlie", "age": 30},
+				map[string]any{"name": "Alice", "age": 25},
+				map[string]any{"name": "Bob", "age": 35},
+			},
+			key: []string{"name"},
+			want: []any{
+				map[string]any{"name": "Alice", "age": 25},
+				map[string]any{"name": "Bob", "age": 35},
+				map[string]any{"name": "Charlie", "age": 30},
+			},
+		},
+		{
+			name: "Sort by numeric key",
+			input: []any{
+				map[string]any{"name": "C", "price": 30.0},
+				map[string]any{"name": "A", "price": 10.0},
+				map[string]any{"name": "B", "price": 20.0},
+			},
+			key: []string{"price"},
+			want: []any{
+				map[string]any{"name": "A", "price": 10.0},
+				map[string]any{"name": "B", "price": 20.0},
+				map[string]any{"name": "C", "price": 30.0},
+			},
+		},
+		{
+			name:  "Sort with nil elements",
+			input: []any{nil, "b", "a", nil},
+			want:  []any{nil, nil, "a", "b"},
+		},
+		{
+			name:  "Empty slice",
+			input: []any{},
+			want:  []any{},
+		},
+		{
+			name:    "Not a slice",
+			input:   "not-a-slice",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Sort(tt.input, tt.key...)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestSortNatural(t *testing.T) {
+	tests := []struct {
+		name  string
+		input any
+		key   []string
+		want  []any
+	}{
+		{
+			name:  "Case insensitive sort",
+			input: []any{"Banana", "apple", "Cherry"},
+			want:  []any{"apple", "Banana", "Cherry"},
+		},
+		{
+			name:  "All same case",
+			input: []any{"c", "a", "b"},
+			want:  []any{"a", "b", "c"},
+		},
+		{
+			name: "Sort by key case insensitive",
+			input: []any{
+				map[string]any{"name": "charlie"},
+				map[string]any{"name": "Alice"},
+				map[string]any{"name": "Bob"},
+			},
+			key: []string{"name"},
+			want: []any{
+				map[string]any{"name": "Alice"},
+				map[string]any{"name": "Bob"},
+				map[string]any{"name": "charlie"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := SortNatural(tt.input, tt.key...)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestCompact(t *testing.T) {
+	tests := []struct {
+		name  string
+		input any
+		key   []string
+		want  []any
+	}{
+		{
+			name:  "Remove nils",
+			input: []any{"a", nil, "b", nil, "c"},
+			want:  []any{"a", "b", "c"},
+		},
+		{
+			name:  "No nils",
+			input: []any{"a", "b", "c"},
+			want:  []any{"a", "b", "c"},
+		},
+		{
+			name:  "All nils",
+			input: []any{nil, nil, nil},
+			want:  []any{},
+		},
+		{
+			name:  "Empty slice",
+			input: []any{},
+			want:  []any{},
+		},
+		{
+			name: "With key",
+			input: []any{
+				map[string]any{"name": "Alice"},
+				map[string]any{"other": "Bob"},
+				map[string]any{"name": "Charlie"},
+			},
+			key: []string{"name"},
+			want: []any{
+				map[string]any{"name": "Alice"},
+				map[string]any{"name": "Charlie"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Compact(tt.input, tt.key...)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestConcat(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   any
+		other   any
+		want    []any
+		wantErr bool
+	}{
+		{
+			name:  "Two string slices",
+			input: []any{"a", "b"},
+			other: []any{"c", "d"},
+			want:  []any{"a", "b", "c", "d"},
+		},
+		{
+			name:  "First empty",
+			input: []any{},
+			other: []any{"a", "b"},
+			want:  []any{"a", "b"},
+		},
+		{
+			name:  "Second empty",
+			input: []any{"a", "b"},
+			other: []any{},
+			want:  []any{"a", "b"},
+		},
+		{
+			name:  "Both empty",
+			input: []any{},
+			other: []any{},
+			want:  []any{},
+		},
+		{
+			name:    "First not a slice",
+			input:   "not-a-slice",
+			other:   []any{"a"},
+			wantErr: true,
+		},
+		{
+			name:    "Second not a slice",
+			input:   []any{"a"},
+			other:   "not-a-slice",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Concat(tt.input, tt.other)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestWhere(t *testing.T) {
+	products := []any{
+		map[string]any{"name": "Shoes", "available": true, "price": 50.0},
+		map[string]any{"name": "Shirt", "available": false, "price": 30.0},
+		map[string]any{"name": "Pants", "available": true, "price": 40.0},
+	}
+
+	tests := []struct {
+		name  string
+		input any
+		key   string
+		value []any
+		want  []any
+	}{
+		{
+			name:  "Where with value",
+			input: products,
+			key:   "available",
+			value: []any{true},
+			want: []any{
+				map[string]any{"name": "Shoes", "available": true, "price": 50.0},
+				map[string]any{"name": "Pants", "available": true, "price": 40.0},
+			},
+		},
+		{
+			name:  "Where truthy (no value)",
+			input: products,
+			key:   "available",
+			want: []any{
+				map[string]any{"name": "Shoes", "available": true, "price": 50.0},
+				map[string]any{"name": "Pants", "available": true, "price": 40.0},
+			},
+		},
+		{
+			name:  "Where with string value",
+			input: products,
+			key:   "name",
+			value: []any{"Shirt"},
+			want: []any{
+				map[string]any{"name": "Shirt", "available": false, "price": 30.0},
+			},
+		},
+		{
+			name:  "Where no match",
+			input: products,
+			key:   "name",
+			value: []any{"Hat"},
+			want:  []any{},
+		},
+		{
+			name:  "Empty slice",
+			input: []any{},
+			key:   "name",
+			want:  []any{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Where(tt.input, tt.key, tt.value...)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestReject(t *testing.T) {
+	products := []any{
+		map[string]any{"name": "Shoes", "available": true},
+		map[string]any{"name": "Shirt", "available": false},
+		map[string]any{"name": "Pants", "available": true},
+	}
+
+	tests := []struct {
+		name  string
+		input any
+		key   string
+		value []any
+		want  []any
+	}{
+		{
+			name:  "Reject with value",
+			input: products,
+			key:   "available",
+			value: []any{false},
+			want: []any{
+				map[string]any{"name": "Shoes", "available": true},
+				map[string]any{"name": "Pants", "available": true},
+			},
+		},
+		{
+			name:  "Reject truthy (no value)",
+			input: products,
+			key:   "available",
+			want: []any{
+				map[string]any{"name": "Shirt", "available": false},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Reject(tt.input, tt.key, tt.value...)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestFind(t *testing.T) {
+	products := []any{
+		map[string]any{"handle": "shoes", "price": 50.0},
+		map[string]any{"handle": "shirt", "price": 30.0},
+		map[string]any{"handle": "pants", "price": 40.0},
+	}
+
+	tests := []struct {
+		name  string
+		input any
+		key   string
+		value any
+		want  any
+	}{
+		{
+			name:  "Find existing",
+			input: products,
+			key:   "handle",
+			value: "shirt",
+			want:  map[string]any{"handle": "shirt", "price": 30.0},
+		},
+		{
+			name:  "Find not existing",
+			input: products,
+			key:   "handle",
+			value: "hat",
+			want:  nil,
+		},
+		{
+			name:  "Find in empty slice",
+			input: []any{},
+			key:   "handle",
+			value: "shoes",
+			want:  nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Find(tt.input, tt.key, tt.value)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestFindIndex(t *testing.T) {
+	products := []any{
+		map[string]any{"handle": "shoes"},
+		map[string]any{"handle": "shirt"},
+		map[string]any{"handle": "pants"},
+	}
+
+	tests := []struct {
+		name  string
+		input any
+		key   string
+		value any
+		want  int
+	}{
+		{
+			name:  "Find index existing",
+			input: products,
+			key:   "handle",
+			value: "shirt",
+			want:  1,
+		},
+		{
+			name:  "Find index not existing",
+			input: products,
+			key:   "handle",
+			value: "hat",
+			want:  -1,
+		},
+		{
+			name:  "Find index first",
+			input: products,
+			key:   "handle",
+			value: "shoes",
+			want:  0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FindIndex(tt.input, tt.key, tt.value)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestHas(t *testing.T) {
+	products := []any{
+		map[string]any{"name": "Shoes", "available": true},
+		map[string]any{"name": "Shirt", "available": false},
+	}
+
+	tests := []struct {
+		name  string
+		input any
+		key   string
+		value []any
+		want  bool
+	}{
+		{
+			name:  "Has truthy property",
+			input: products,
+			key:   "available",
+			want:  true,
+		},
+		{
+			name:  "Has with value match",
+			input: products,
+			key:   "name",
+			value: []any{"Shoes"},
+			want:  true,
+		},
+		{
+			name:  "Has with value no match",
+			input: products,
+			key:   "name",
+			value: []any{"Hat"},
+			want:  false,
+		},
+		{
+			name:  "Has missing key",
+			input: products,
+			key:   "color",
+			want:  false,
+		},
+		{
+			name:  "Empty slice",
+			input: []any{},
+			key:   "name",
+			want:  false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Has(tt.input, tt.key, tt.value...)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
 // deepcopy creates a deep copy of the input slice to ensure the original slice is not modified.
 func deepcopy(input any) any {
 	inVal := reflect.ValueOf(input)

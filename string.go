@@ -1,8 +1,12 @@
 package filter
 
 import (
-	"cmp"
+	"encoding/base64"
 	"fmt"
+	"html"
+	"net/url"
+	"reflect"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -15,9 +19,18 @@ import (
 
 var defaultSpaceRunes = []rune{'_', ' ', ':', '-', '/'}
 
-// Default sets a default value for an empty string.
-func Default(input, defaultValue string) string {
-	return cmp.Or(input, defaultValue)
+// Default returns defaultValue if input is nil, false, or empty string.
+func Default(input, defaultValue any) any {
+	if input == nil {
+		return defaultValue
+	}
+	if b, ok := input.(bool); ok && !b {
+		return defaultValue
+	}
+	if s, ok := input.(string); ok && s == "" {
+		return defaultValue
+	}
+	return input
 }
 
 // Trim strips leading and trailing whitespace from a string.
@@ -92,16 +105,15 @@ func Titleize(input string) string {
 	return result.String()
 }
 
-// Capitalize capitalizes the first letter of the string.
+// Capitalize capitalizes the first letter and lowercases the rest.
+// This matches Liquid's capitalize behavior.
 func Capitalize(input string) string {
 	if input == "" {
 		return ""
 	}
-
-	firstRune, size := utf8.DecodeRuneInString(input)
-	capitalizedFirstRune := unicode.ToTitle(firstRune)
-
-	return string(capitalizedFirstRune) + input[size:]
+	runes := []rune(strings.ToLower(input))
+	runes[0] = unicode.ToTitle(runes[0])
+	return string(runes)
 }
 
 // Camelize converts a string to camelCase. It lowercases the first letter
@@ -217,22 +229,34 @@ func Ordinalize(number int) string {
 	return strconv.Itoa(number) + suffix
 }
 
-// Truncate truncates a string to a specified length and appends "..." if it was longer.
-func Truncate(input string, maxLength int) string {
+// Truncate truncates a string to maxLength characters (including ellipsis).
+// An optional ellipsis string can be provided (default "...").
+func Truncate(input string, maxLength int, ellipsis ...string) string {
+	omission := "..."
+	if len(ellipsis) > 0 {
+		omission = ellipsis[0]
+	}
 	if maxLength <= 0 {
 		return ""
 	}
-
 	runes := []rune(input)
 	if len(runes) <= maxLength {
 		return input
 	}
-
-	return string(runes[:maxLength]) + "..."
+	omissionRunes := []rune(omission)
+	if maxLength <= len(omissionRunes) {
+		return string(omissionRunes[:maxLength])
+	}
+	return string(runes[:maxLength-len(omissionRunes)]) + omission
 }
 
-// TruncateWords truncates a string to a specified number of words and appends "..." if it was longer.
-func TruncateWords(input string, maxWords int) string {
+// TruncateWords truncates a string to a specified number of words.
+// An optional ellipsis string can be provided (default "...").
+func TruncateWords(input string, maxWords int, ellipsis ...string) string {
+	omission := "..."
+	if len(ellipsis) > 0 {
+		omission = ellipsis[0]
+	}
 	if maxWords <= 0 {
 		return ""
 	}
@@ -273,7 +297,185 @@ func TruncateWords(input string, maxWords int) string {
 	if len(truncated) > 0 {
 		truncated = truncated[:len(truncated)-1]
 	}
-	return truncated + "..."
+	return truncated + omission
+}
+
+// Package-level compiled regexps for HTML processing.
+var (
+	htmlScriptRe  = regexp.MustCompile(`(?is)<script.*?</script>`)
+	htmlStyleRe   = regexp.MustCompile(`(?is)<style.*?</style>`)
+	htmlCommentRe = regexp.MustCompile(`(?s)<!--.*?-->`)
+	htmlTagRe     = regexp.MustCompile(`<[^>]*>`)
+)
+
+// Escape converts <, >, &, ", ' to HTML entities.
+func Escape(input string) string {
+	return html.EscapeString(input)
+}
+
+// EscapeOnce converts <, >, &, ", ' to HTML entities without double-escaping.
+// Already escaped entities like &amp; &lt; &#39; are preserved.
+func EscapeOnce(input string) string {
+	return html.EscapeString(html.UnescapeString(input))
+}
+
+// StripHTML removes all HTML tags, script blocks, style blocks, and comments from the input.
+func StripHTML(input string) string {
+	s := htmlScriptRe.ReplaceAllString(input, "")
+	s = htmlStyleRe.ReplaceAllString(s, "")
+	s = htmlCommentRe.ReplaceAllString(s, "")
+	s = htmlTagRe.ReplaceAllString(s, "")
+	return s
+}
+
+// newlineReplacer is a package-level replacer for stripping newlines,
+// avoiding repeated allocation on each call.
+var newlineReplacer = strings.NewReplacer("\r\n", "", "\r", "", "\n", "")
+
+// StripNewlines removes all newline characters (\n, \r\n, \r) from the input.
+func StripNewlines(input string) string {
+	return newlineReplacer.Replace(input)
+}
+
+// TrimLeft removes leading whitespace from a string.
+// Liquid equivalent: lstrip.
+func TrimLeft(input string) string {
+	return strings.TrimLeftFunc(input, unicode.IsSpace)
+}
+
+// TrimRight removes trailing whitespace from a string.
+// Liquid equivalent: rstrip.
+func TrimRight(input string) string {
+	return strings.TrimRightFunc(input, unicode.IsSpace)
+}
+
+// ReplaceFirst replaces the first occurrence of old with replacement.
+func ReplaceFirst(input, old, replacement string) string {
+	if old == "" {
+		return input
+	}
+	return strings.Replace(input, old, replacement, 1)
+}
+
+// ReplaceLast replaces the last occurrence of old with replacement.
+func ReplaceLast(input, old, replacement string) string {
+	if old == "" {
+		return input
+	}
+	idx := strings.LastIndex(input, old)
+	if idx < 0 {
+		return input
+	}
+	return input[:idx] + replacement + input[idx+len(old):]
+}
+
+// RemoveFirst removes the first occurrence of a substring.
+func RemoveFirst(input, toRemove string) string {
+	return ReplaceFirst(input, toRemove, "")
+}
+
+// RemoveLast removes the last occurrence of a substring.
+func RemoveLast(input, toRemove string) string {
+	return ReplaceLast(input, toRemove, "")
+}
+
+// Slice extracts a substring or sub-slice.
+// For strings: returns substring starting at offset with optional length.
+// For slices: returns sub-slice starting at offset with optional length.
+// Negative offset counts from end (-1 = last element).
+// If length is omitted, returns single character/element.
+func Slice(input any, offset int, length ...int) (any, error) {
+	switch v := input.(type) {
+	case string:
+		return sliceString(v, offset, length...), nil
+	default:
+		rv := reflect.ValueOf(input)
+		if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
+			return nil, fmt.Errorf("%w: expected string or slice, got %T", ErrUnsupportedType, input)
+		}
+		return sliceReflect(rv, offset, length...), nil
+	}
+}
+
+// sliceString extracts a substring from s starting at offset with optional size.
+// Negative offset counts from end. Returns single rune if size is omitted.
+func sliceString(s string, offset int, length ...int) string {
+	runes := []rune(s)
+	n := len(runes)
+	if n == 0 {
+		return ""
+	}
+	if offset < 0 {
+		offset = n + offset
+	}
+	if offset < 0 || offset >= n {
+		return ""
+	}
+	size := 1
+	if len(length) > 0 {
+		size = length[0]
+	}
+	if size <= 0 {
+		return ""
+	}
+	end := min(offset+size, n)
+	return string(runes[offset:end])
+}
+
+// sliceReflect extracts a sub-slice from rv starting at offset with optional size.
+// Negative offset counts from end. Returns single element if size is omitted.
+func sliceReflect(rv reflect.Value, offset int, length ...int) []any {
+	n := rv.Len()
+	if n == 0 {
+		return []any{}
+	}
+	if offset < 0 {
+		offset = n + offset
+	}
+	if offset < 0 || offset >= n {
+		return []any{}
+	}
+	size := 1
+	if len(length) > 0 {
+		size = length[0]
+	}
+	if size <= 0 {
+		return []any{}
+	}
+	end := min(offset+size, n)
+	result := make([]any, end-offset)
+	for i := offset; i < end; i++ {
+		result[i-offset] = rv.Index(i).Interface()
+	}
+	return result
+}
+
+// UrlEncode percent-encodes a string for use in URLs.
+func UrlEncode(input string) string {
+	return url.QueryEscape(input)
+}
+
+// UrlDecode decodes a percent-encoded string.
+func UrlDecode(input string) (string, error) {
+	result, err := url.QueryUnescape(input)
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrInvalidArguments, err)
+	}
+	return result, nil
+}
+
+// Base64Encode encodes a string to standard Base64.
+func Base64Encode(input string) string {
+	return base64.StdEncoding.EncodeToString([]byte(input))
+}
+
+// Base64Decode decodes a standard Base64 string.
+func Base64Decode(input string) (string, error) {
+	b, err := base64.StdEncoding.DecodeString(input)
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrInvalidArguments, err)
+	}
+	return string(b), nil
 }
 
 // isSpace checks if a rune is a word separator.

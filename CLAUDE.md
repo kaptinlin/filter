@@ -5,7 +5,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 ## Project Overview
 
 **Module**: `github.com/kaptinlin/filter`
-**Go Version**: 1.26
 **Purpose**: Template filter library providing utilities for string manipulation, array operations, date formatting, number formatting, and mathematical computations.
 
 This is a pure utility library with no state or configuration. All functions are designed to be used directly in template engines or as general-purpose data transformation utilities.
@@ -36,8 +35,8 @@ Single-package design organized by functional domain:
 
 ```
 filter/
-├── string.go          # String manipulation (trim, case conversion, pluralization, slugify)
-├── array.go           # Slice operations (unique, join, shuffle, aggregations)
+├── string.go          # String manipulation (trim, case, escape, encode, truncate, replace, slice)
+├── array.go           # Slice operations (unique, join, sort, where, find, compact, concat)
 ├── date.go            # Date/time formatting using carbon library
 ├── number.go          # Number formatting (including byte formatting)
 ├── math.go            # Mathematical operations (abs, round, arithmetic)
@@ -57,10 +56,23 @@ This library uses primitive types and `any` for maximum flexibility:
 // String functions: string input/output
 func Trim(input string) string
 func Replace(input, old, replacement string) string
+func Truncate(input string, maxLength int, ellipsis ...string) string
+
+// HTML/encoding functions: string input/output
+func Escape(input string) string
+func EscapeOnce(input string) string
+func Base64Encode(input string) string
+func Base64Decode(input string) (string, error)
+
+// Dual-mode functions: any input, any output
+func Default(input, defaultValue any) any
+func Slice(input any, offset int, length ...int) (any, error)
 
 // Array functions: any input (slice/array), typed output
 func Unique(input any) ([]any, error)
-func Max(input any) (float64, error)
+func Sort(input any, key ...string) ([]any, error)
+func Where(input any, key string, value ...any) ([]any, error)
+func Find(input any, key string, value any) (any, error)
 
 // Data extraction: any input, any output
 func Extract(input any, key string) (any, error)

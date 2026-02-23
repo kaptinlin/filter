@@ -44,53 +44,76 @@ func main() {
 
 ## String Functions
 
-[The string Functions](docs/string.md) provide a range of functions to manipulate and query strings effectively.
+[The string functions](docs/string.md) provide a range of functions to manipulate and query strings effectively.
 
-| Function                                                                 | Description                                                                                      |
-|--------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| [`Default`](docs/string.md#default)                                      | Returns a default value if the string is empty.                                                  |
-| [`Trim`](docs/string.md#trim)                                            | Removes leading and trailing whitespace from the string.                                         |
-| [`Split`](docs/string.md#split)                                          | Divides a string into a slice of strings based on a specified delimiter.                         |
-| [`Replace`](docs/string.md#replace)                                      | Substitutes all instances of a specified substring with another string.                          |
-| [`Remove`](docs/string.md#remove)                                        | Eliminates all occurrences of a specified substring from the string.                             |
-| [`Append`](docs/string.md#append)                                        | Adds characters to the end of a string.                                                          |
-| [`Prepend`](docs/string.md#prepend)                                      | Adds characters to the beginning of a string.                                                    |
-| [`Length`](docs/string.md#length)                                        | Returns the number of characters in a string, accounting for UTF-8 encoding.                     |
-| [`Upper`](docs/string.md#upper)                                          | Converts all characters in a string to uppercase.                                                |
-| [`Lower`](docs/string.md#lower)                                          | Converts all characters in a string to lowercase.                                                |
-| [`Titleize`](docs/string.md#titleize)                                    | Capitalizes the first letter of each word in a string.                                           |
-| [`Capitalize`](docs/string.md#capitalize)                                | Capitalizes the first letter of a string.                                                        |
-| [`Camelize`](docs/string.md#camelize)                                    | Converts a string to camelCase.                                                                  |
-| [`Pascalize`](docs/string.md#pascalize)                                  | Converts a string to PascalCase.                                                                 |
-| [`Dasherize`](docs/string.md#dasherize)                                  | Transforms a string into a lowercased, dash-separated format.                                    |
-| [`Slugify`](docs/string.md#slugify)                                      | Converts a string into a URL-friendly "slug", ensuring it is safe for use in URLs and filenames. |
-| [`Pluralize`](docs/string.md#pluralize)                                  | Determines the singular or plural form of a word based on a numeric value.                       |
-| [`Ordinalize`](docs/string.md#ordinalize)                                | Converts a number to its ordinal English form.                                                   |
-| [`Truncate`](docs/string.md#truncate)                                    | Shortens a string to a specified length and appends "..." if it exceeds that length.              |
-| [`TruncateWords`](docs/string.md#truncatewords)                          | Truncates a string to a specified number of words, appending "..." if it exceeds that limit.     |
+| Function | Description |
+|---|---|
+| [`Default`](docs/string.md#default) | Returns a default value if input is nil, false, or empty string. |
+| [`Trim`](docs/string.md#trim) | Removes leading and trailing whitespace. |
+| [`TrimLeft`](docs/string.md#trimleft) | Removes leading whitespace (Liquid `lstrip`). |
+| [`TrimRight`](docs/string.md#trimright) | Removes trailing whitespace (Liquid `rstrip`). |
+| [`Split`](docs/string.md#split) | Divides a string into a slice based on a delimiter. |
+| [`Replace`](docs/string.md#replace) | Substitutes all occurrences of a substring. |
+| [`ReplaceFirst`](docs/string.md#replacefirst) | Replaces the first occurrence of a substring. |
+| [`ReplaceLast`](docs/string.md#replacelast) | Replaces the last occurrence of a substring. |
+| [`Remove`](docs/string.md#remove) | Eliminates all occurrences of a substring. |
+| [`RemoveFirst`](docs/string.md#removefirst) | Removes the first occurrence of a substring. |
+| [`RemoveLast`](docs/string.md#removelast) | Removes the last occurrence of a substring. |
+| [`Append`](docs/string.md#append) | Adds characters to the end of a string. |
+| [`Prepend`](docs/string.md#prepend) | Adds characters to the beginning of a string. |
+| [`Length`](docs/string.md#length) | Returns the character count, accounting for UTF-8. |
+| [`Upper`](docs/string.md#upper) | Converts all characters to uppercase. |
+| [`Lower`](docs/string.md#lower) | Converts all characters to lowercase. |
+| [`Titleize`](docs/string.md#titleize) | Capitalizes the first letter of each word. |
+| [`Capitalize`](docs/string.md#capitalize) | Capitalizes the first letter, lowercases the rest. |
+| [`Camelize`](docs/string.md#camelize) | Converts a string to camelCase. |
+| [`Pascalize`](docs/string.md#pascalize) | Converts a string to PascalCase. |
+| [`Dasherize`](docs/string.md#dasherize) | Transforms into a lowercased, dash-separated format. |
+| [`Slugify`](docs/string.md#slugify) | Converts into a URL-friendly slug. |
+| [`Pluralize`](docs/string.md#pluralize) | Returns singular or plural form based on count. |
+| [`Ordinalize`](docs/string.md#ordinalize) | Converts a number to its ordinal English form. |
+| [`Truncate`](docs/string.md#truncate) | Shortens to a length (including ellipsis), with optional custom ellipsis. |
+| [`TruncateWords`](docs/string.md#truncatewords) | Truncates to a word count, with optional custom ellipsis. |
+| [`Escape`](docs/string.md#escape) | HTML-escapes `<`, `>`, `&`, `"`, `'`. |
+| [`EscapeOnce`](docs/string.md#escapeonce) | HTML-escapes without double-escaping existing entities. |
+| [`StripHTML`](docs/string.md#striphtml) | Removes HTML tags, scripts, styles, and comments. |
+| [`StripNewlines`](docs/string.md#stripnewlines) | Removes all newline characters. |
+| [`Slice`](docs/string.md#slice) | Extracts a substring or sub-slice with negative offset support. |
+| [`UrlEncode`](docs/string.md#urlencode) | Percent-encodes a string for URLs. |
+| [`UrlDecode`](docs/string.md#urldecode) | Decodes a percent-encoded string. |
+| [`Base64Encode`](docs/string.md#base64encode) | Encodes a string to standard Base64. |
+| [`Base64Decode`](docs/string.md#base64decode) | Decodes a standard Base64 string. |
 
 
 ## Array Functions
 
 [Array functions](docs/array.md) help you work with slices, offering tools to modify, analyze, or transform slice data.
 
-
-| Function                                                               | Description                                             |
-|------------------------------------------------------------------------|---------------------------------------------------------|
-| [`Unique`](docs/array.md#unique)                                       | Removes duplicate elements, leaving only unique ones.   |
-| [`Join`](docs/array.md#join)                                           | Concatenates slice elements into a single string.       |
-| [`First`](docs/array.md#first)                                         | Retrieves the first element of the slice.               |
-| [`Last`](docs/array.md#last)                                           | Returns the last element of the slice.                  |
-| [`Index`](docs/array.md#index)                                         | Returns the element at a specified index in the slice.  |
-| [`Random`](docs/array.md#random)                                       | Selects a random element from the slice.                |
-| [`Reverse`](docs/array.md#reverse)                                     | Reverses the order of elements in the slice.            |
-| [`Shuffle`](docs/array.md#shuffle)                                     | Randomly rearranges the elements within the slice.      |
-| [`Size`](docs/array.md#size)                                           | Determines the size (length) of the slice.              |
-| [`Max`](docs/array.md#max)                                             | Identifies the maximum value in a numerical slice.      |
-| [`Min`](docs/array.md#min)                                             | Finds the minimum value in a numerical slice.           |
-| [`Sum`](docs/array.md#sum)                                             | Calculates the sum of all elements in a numerical slice.|
-| [`Average`](docs/array.md#average)                                     | Computes the average value of a numerical slice.        |
-| [`Map`](docs/array.md#map)                                             | Extracts a slice of values for a specified key.         |
+| Function | Description |
+|---|---|
+| [`Unique`](docs/array.md#unique) | Removes duplicate elements, leaving only unique ones. |
+| [`Join`](docs/array.md#join) | Concatenates slice elements into a single string. |
+| [`First`](docs/array.md#first) | Retrieves the first element of the slice. |
+| [`Last`](docs/array.md#last) | Returns the last element of the slice. |
+| [`Index`](docs/array.md#index) | Returns the element at a specified index. |
+| [`Random`](docs/array.md#random) | Selects a random element from the slice. |
+| [`Reverse`](docs/array.md#reverse) | Reverses the order of elements. |
+| [`Shuffle`](docs/array.md#shuffle) | Randomly rearranges the elements. |
+| [`Size`](docs/array.md#size) | Determines the size of a slice, array, or map. |
+| [`Max`](docs/array.md#max) | Identifies the maximum value in a numerical slice. |
+| [`Min`](docs/array.md#min) | Finds the minimum value in a numerical slice. |
+| [`Sum`](docs/array.md#sum) | Calculates the sum of all elements. |
+| [`Average`](docs/array.md#average) | Computes the average value. |
+| [`Map`](docs/array.md#map) | Extracts values for a specified key from each element. |
+| [`Sort`](docs/array.md#sort) | Sorts in ascending order, optionally by key. |
+| [`SortNatural`](docs/array.md#sortnatural) | Sorts case-insensitively, optionally by key. |
+| [`Compact`](docs/array.md#compact) | Removes nil elements, optionally by key. |
+| [`Concat`](docs/array.md#concat) | Combines two slices into one. |
+| [`Where`](docs/array.md#where) | Filters keeping elements matching a property value. |
+| [`Reject`](docs/array.md#reject) | Filters removing elements matching a property value. |
+| [`Find`](docs/array.md#find) | Returns first element matching a property value. |
+| [`FindIndex`](docs/array.md#findindex) | Returns index of first matching element (-1 if none). |
+| [`Has`](docs/array.md#has) | Checks if any element matches a property criteria. |
 
 
 ## Date Functions

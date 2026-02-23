@@ -43,11 +43,13 @@ func ExampleSlugify() {
 }
 
 func ExampleTruncate() {
-	fmt.Println(filter.Truncate("Hello, World!", 5))
+	fmt.Println(filter.Truncate("Hello, World!", 8))
 	fmt.Println(filter.Truncate("Hi", 5))
+	fmt.Println(filter.Truncate("Hello, World!", 10, "--"))
 	// Output:
 	// Hello...
 	// Hi
+	// Hello, W--
 }
 
 func ExamplePluralize() {
@@ -104,4 +106,112 @@ func ExampleRound() {
 	result, _ := filter.Round(3.14159, 2)
 	fmt.Println(result)
 	// Output: 3.14
+}
+
+func ExampleEscape() {
+	fmt.Println(filter.Escape("<p>Hello & World</p>"))
+	// Output: &lt;p&gt;Hello &amp; World&lt;/p&gt;
+}
+
+func ExampleEscapeOnce() {
+	fmt.Println(filter.EscapeOnce("&lt;p&gt;already escaped&lt;/p&gt;"))
+	fmt.Println(filter.EscapeOnce("1 < 2 & 3"))
+	// Output:
+	// &lt;p&gt;already escaped&lt;/p&gt;
+	// 1 &lt; 2 &amp; 3
+}
+
+func ExampleStripHTML() {
+	fmt.Println(filter.StripHTML("<p>Hello <b>World</b></p>"))
+	// Output: Hello World
+}
+
+func ExampleTrimLeft() {
+	fmt.Println(filter.TrimLeft("  hello  "))
+	// Output: hello
+}
+
+func ExampleTrimRight() {
+	fmt.Println(filter.TrimRight("  hello  "))
+	// Output:   hello
+}
+
+func ExampleReplaceFirst() {
+	fmt.Println(filter.ReplaceFirst("hello hello hello", "hello", "hi"))
+	// Output: hi hello hello
+}
+
+func ExampleReplaceLast() {
+	fmt.Println(filter.ReplaceLast("hello hello hello", "hello", "hi"))
+	// Output: hello hello hi
+}
+
+func ExampleUrlEncode() {
+	fmt.Println(filter.UrlEncode("hello world"))
+	// Output: hello+world
+}
+
+func ExampleBase64Encode() {
+	fmt.Println(filter.Base64Encode("hello world"))
+	// Output: aGVsbG8gd29ybGQ=
+}
+
+func ExampleBase64Decode() {
+	result, _ := filter.Base64Decode("aGVsbG8gd29ybGQ=")
+	fmt.Println(result)
+	// Output: hello world
+}
+
+func ExampleSort() {
+	result, _ := filter.Sort([]any{"banana", "apple", "cherry"})
+	fmt.Println(result)
+	// Output: [apple banana cherry]
+}
+
+func ExampleCompact() {
+	result, _ := filter.Compact([]any{"a", nil, "b", nil, "c"})
+	fmt.Println(result)
+	// Output: [a b c]
+}
+
+func ExampleConcat() {
+	result, _ := filter.Concat([]any{"a", "b"}, []any{"c", "d"})
+	fmt.Println(result)
+	// Output: [a b c d]
+}
+
+func ExampleWhere() {
+	products := []any{
+		map[string]any{"name": "Shoes", "available": true},
+		map[string]any{"name": "Shirt", "available": false},
+		map[string]any{"name": "Pants", "available": true},
+	}
+	result, _ := filter.Where(products, "available", true)
+	for _, p := range result {
+		m := p.(map[string]any)
+		fmt.Println(m["name"])
+	}
+	// Output:
+	// Shoes
+	// Pants
+}
+
+func ExampleDefault() {
+	fmt.Println(filter.Default("", "fallback"))
+	fmt.Println(filter.Default("value", "fallback"))
+	fmt.Println(filter.Default(nil, "fallback"))
+	fmt.Println(filter.Default(false, "fallback"))
+	// Output:
+	// fallback
+	// value
+	// fallback
+	// fallback
+}
+
+func ExampleCapitalize() {
+	fmt.Println(filter.Capitalize("hELLO"))
+	fmt.Println(filter.Capitalize("hello world"))
+	// Output:
+	// Hello
+	// Hello world
 }

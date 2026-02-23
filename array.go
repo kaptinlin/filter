@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"cmp"
 	"fmt"
 	"math/rand/v2"
 	"reflect"
@@ -213,6 +214,264 @@ func Map(input any, key string) ([]any, error) {
 		result = append(result, value)
 	}
 	return result, nil
+}
+
+// Sort sorts a slice in ascending order.
+// If key is provided, sorts slice of maps/structs by that property.
+// Elements whose key cannot be extracted retain their relative order.
+func Sort(input any, key ...string) ([]any, error) {
+	slice, err := toSlice(input)
+	if err != nil {
+		return nil, err
+	}
+	result := slices.Clone(slice)
+	slices.SortStableFunc(result, func(a, b any) int {
+		return compareValues(extractOrSelf(a, b, key...))
+	})
+	return result, nil
+}
+
+// SortNatural sorts a slice case-insensitively.
+// If key is provided, sorts by that property case-insensitively.
+// Elements whose key cannot be extracted retain their relative order.
+func SortNatural(input any, key ...string) ([]any, error) {
+	slice, err := toSlice(input)
+	if err != nil {
+		return nil, err
+	}
+	result := slices.Clone(slice)
+	slices.SortStableFunc(result, func(a, b any) int {
+		return compareValuesNatural(extractOrSelf(a, b, key...))
+	})
+	return result, nil
+}
+
+// Compact removes nil elements from a slice.
+// If key is provided, removes elements where the property is nil.
+func Compact(input any, key ...string) ([]any, error) {
+	slice, err := toSlice(input)
+	if err != nil {
+		return nil, err
+	}
+	hasKey := len(key) > 0 && key[0] != ""
+	result := make([]any, 0, len(slice))
+	for _, item := range slice {
+		if hasKey {
+			v, err := Extract(item, key[0])
+			if err != nil || v == nil {
+				continue
+			}
+		} else if item == nil {
+			continue
+		}
+		result = append(result, item)
+	}
+	return result, nil
+}
+
+// Concat combines two slices into one.
+func Concat(input, other any) ([]any, error) {
+	sliceA, err := toSlice(input)
+	if err != nil {
+		return nil, err
+	}
+	sliceB, err := toSlice(other)
+	if err != nil {
+		return nil, err
+	}
+	result := slices.Concat(sliceA, sliceB)
+	if result == nil {
+		result = []any{}
+	}
+	return result, nil
+}
+
+// Where filters a slice, keeping elements where the given property equals the given value.
+// If value is omitted, keeps elements where the property is truthy.
+func Where(input any, key string, value ...any) ([]any, error) {
+	slice, err := toSlice(input)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]any, 0, len(slice))
+	for _, item := range slice {
+		if matchesCriteria(item, key, value...) {
+			result = append(result, item)
+		}
+	}
+	return result, nil
+}
+
+// Reject filters a slice, removing elements where the given property equals the given value.
+// If value is omitted, removes elements where the property is truthy.
+// Inverse of Where.
+func Reject(input any, key string, value ...any) ([]any, error) {
+	slice, err := toSlice(input)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]any, 0, len(slice))
+	for _, item := range slice {
+		if !matchesCriteria(item, key, value...) {
+			result = append(result, item)
+		}
+	}
+	return result, nil
+}
+
+// Find returns the first element in a slice where the given property equals the given value.
+func Find(input any, key string, value any) (any, error) {
+	slice, err := toSlice(input)
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range slice {
+		v, err := Extract(item, key)
+		if err != nil {
+			continue
+		}
+		if valuesEqual(v, value) {
+			return item, nil
+		}
+	}
+	return nil, nil
+}
+
+// FindIndex returns the 0-based index of the first element where the given property
+// equals the given value. Returns -1 if not found.
+func FindIndex(input any, key string, value any) (int, error) {
+	slice, err := toSlice(input)
+	if err != nil {
+		return -1, err
+	}
+	for i, item := range slice {
+		v, err := Extract(item, key)
+		if err != nil {
+			continue
+		}
+		if valuesEqual(v, value) {
+			return i, nil
+		}
+	}
+	return -1, nil
+}
+
+// Has returns true if any element in the slice has a property matching the given criteria.
+// If value is provided, checks property == value.
+// If value is omitted, checks property is truthy.
+func Has(input any, key string, value ...any) (bool, error) {
+	slice, err := toSlice(input)
+	if err != nil {
+		return false, err
+	}
+	for _, item := range slice {
+		if matchesCriteria(item, key, value...) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// extractOrSelf extracts the value at key from a and b when a key is provided.
+// Falls back to the elements themselves when key is empty or extraction fails.
+func extractOrSelf(a, b any, key ...string) (any, any) {
+	if len(key) > 0 && key[0] != "" {
+		va, errA := Extract(a, key[0])
+		vb, errB := Extract(b, key[0])
+		if errA != nil {
+			va = nil
+		}
+		if errB != nil {
+			vb = nil
+		}
+		return va, vb
+	}
+	return a, b
+}
+
+// matchesCriteria checks whether item's property at key matches the given criteria.
+// If value is provided, checks property == value; otherwise checks property is truthy.
+// Returns false if the key cannot be extracted.
+func matchesCriteria(item any, key string, value ...any) bool {
+	v, err := Extract(item, key)
+	if err != nil {
+		return false
+	}
+	if len(value) > 0 {
+		return valuesEqual(v, value[0])
+	}
+	return isTruthy(v)
+}
+
+// compareValues compares two values for sorting.
+// Numbers are compared numerically, everything else as strings.
+func compareValues(a, b any) int {
+	if a == nil && b == nil {
+		return 0
+	}
+	if a == nil {
+		return -1
+	}
+	if b == nil {
+		return 1
+	}
+	fa, errA := toFloat64(a)
+	fb, errB := toFloat64(b)
+	if errA == nil && errB == nil {
+		return cmp.Compare(fa, fb)
+	}
+	return cmp.Compare(fmt.Sprint(a), fmt.Sprint(b))
+}
+
+// compareValuesNatural compares two values case-insensitively for natural sorting.
+func compareValuesNatural(a, b any) int {
+	if a == nil && b == nil {
+		return 0
+	}
+	if a == nil {
+		return -1
+	}
+	if b == nil {
+		return 1
+	}
+	fa, errA := toFloat64(a)
+	fb, errB := toFloat64(b)
+	if errA == nil && errB == nil {
+		return cmp.Compare(fa, fb)
+	}
+	sa := strings.ToLower(fmt.Sprint(a))
+	sb := strings.ToLower(fmt.Sprint(b))
+	return cmp.Compare(sa, sb)
+}
+
+// valuesEqual checks if two values are equal, handling numeric type differences.
+func valuesEqual(a, b any) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	if a == b {
+		return true
+	}
+	fa, errA := toFloat64(a)
+	fb, errB := toFloat64(b)
+	if errA == nil && errB == nil {
+		return fa == fb
+	}
+	return reflect.DeepEqual(a, b)
+}
+
+// isTruthy returns true if the value is not nil and not false.
+func isTruthy(v any) bool {
+	if v == nil {
+		return false
+	}
+	if b, ok := v.(bool); ok {
+		return b
+	}
+	return true
 }
 
 // toFloat64Slice converts input to a slice of float64.
