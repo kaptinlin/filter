@@ -204,7 +204,8 @@ func hashValueReflect(h *maphash.Hash, rv reflect.Value) {
 			hashValueReflect(h, rv.Elem())
 		}
 
-	default:
+	case reflect.Invalid, reflect.Uintptr, reflect.Complex64, reflect.Complex128,
+		reflect.Chan, reflect.Func, reflect.Struct, reflect.UnsafePointer:
 		_, _ = fmt.Fprint(h, rv.Interface())
 	}
 }
