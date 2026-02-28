@@ -2,7 +2,10 @@ package filter
 
 import (
 	"cmp"
+	"encoding/binary"
 	"fmt"
+	"hash/maphash"
+	"math"
 	"math/rand/v2"
 	"reflect"
 	"slices"
@@ -10,12 +13,35 @@ import (
 )
 
 // Unique removes duplicate elements from a slice.
+// It uses a comparable map for comparable types (fast path) and falls back
+// to hash-based deduplication for non-comparable types like slices and maps.
 func Unique(input any) ([]any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
 	}
 
+	if len(slice) == 0 {
+		return []any{}, nil
+	}
+
+	// Check if all elements are comparable. If so, use the fast path.
+	allComparable := true
+	for _, item := range slice {
+		if item != nil && !reflect.TypeOf(item).Comparable() {
+			allComparable = false
+			break
+		}
+	}
+
+	if allComparable {
+		return uniqueComparable(slice), nil
+	}
+	return uniqueHash(slice), nil
+}
+
+// uniqueComparable deduplicates a slice where all elements are comparable types.
+func uniqueComparable(slice []any) []any {
 	seen := make(map[any]bool, len(slice))
 	result := make([]any, 0, len(slice))
 	for _, item := range slice {
@@ -24,7 +50,219 @@ func Unique(input any) ([]any, error) {
 			result = append(result, item)
 		}
 	}
-	return result, nil
+	return result
+}
+
+// uniqueHash deduplicates a slice using maphash for non-comparable types.
+// It hashes each value deterministically and only performs deep equality checks
+// on hash collisions.
+func uniqueHash(slice []any) []any {
+	hashes := make(map[uint64][]int, len(slice)) // hash -> indices in result
+	seed := maphash.MakeSeed()
+	result := make([]any, 0, len(slice))
+
+	for _, item := range slice {
+		var h maphash.Hash
+		h.SetSeed(seed)
+		hashValue(&h, item)
+		hv := h.Sum64()
+
+		duplicate := false
+		if indices := hashes[hv]; len(indices) > 0 {
+			for _, j := range indices {
+				if deepEqualValue(item, result[j]) {
+					duplicate = true
+					break
+				}
+			}
+		}
+
+		if !duplicate {
+			hashes[hv] = append(hashes[hv], len(result))
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+// hashValue writes a deterministic hash of a value to the hasher.
+// It uses type assertions for common types and falls back to reflection.
+func hashValue(h *maphash.Hash, v any) {
+	switch val := v.(type) {
+	case nil:
+		_ = h.WriteByte(0)
+
+	case bool:
+		if val {
+			_ = h.WriteByte(1)
+		} else {
+			_ = h.WriteByte(0)
+		}
+
+	case float64:
+		var buf [8]byte
+		binary.BigEndian.PutUint64(buf[:], math.Float64bits(val))
+		_, _ = h.Write(buf[:])
+
+	case int:
+		var buf [8]byte
+		binary.BigEndian.PutUint64(buf[:], uint64(val)) //nolint:gosec // Overflow is acceptable for hashing
+		_, _ = h.Write(buf[:])
+
+	case string:
+		_, _ = h.WriteString(val)
+
+	case []any:
+		var buf [8]byte
+		binary.BigEndian.PutUint64(buf[:], uint64(len(val)))
+		_, _ = h.Write(buf[:])
+		for _, item := range val {
+			hashValue(h, item)
+		}
+
+	case map[string]any:
+		keys := make([]string, 0, len(val))
+		for k := range val {
+			keys = append(keys, k)
+		}
+		slices.Sort(keys)
+
+		var buf [8]byte
+		binary.BigEndian.PutUint64(buf[:], uint64(len(keys)))
+		_, _ = h.Write(buf[:])
+
+		for _, k := range keys {
+			_, _ = h.WriteString(k)
+			hashValue(h, val[k])
+		}
+
+	default:
+		hashValueReflect(h, reflect.ValueOf(v))
+	}
+}
+
+// hashValueReflect handles hashing for types that need reflection.
+func hashValueReflect(h *maphash.Hash, rv reflect.Value) {
+	if !rv.IsValid() {
+		_ = h.WriteByte(0)
+		return
+	}
+
+	switch rv.Kind() {
+	case reflect.Bool:
+		if rv.Bool() {
+			_ = h.WriteByte(1)
+		} else {
+			_ = h.WriteByte(0)
+		}
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		var buf [8]byte
+		binary.BigEndian.PutUint64(buf[:], uint64(rv.Int())) //nolint:gosec // Overflow is acceptable for hashing
+		_, _ = h.Write(buf[:])
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		var buf [8]byte
+		binary.BigEndian.PutUint64(buf[:], rv.Uint())
+		_, _ = h.Write(buf[:])
+
+	case reflect.Float32, reflect.Float64:
+		var buf [8]byte
+		binary.BigEndian.PutUint64(buf[:], math.Float64bits(rv.Float()))
+		_, _ = h.Write(buf[:])
+
+	case reflect.String:
+		_, _ = h.WriteString(rv.String())
+
+	case reflect.Slice, reflect.Array:
+		var buf [8]byte
+		binary.BigEndian.PutUint64(buf[:], uint64(rv.Len())) //nolint:gosec // Overflow is acceptable for hashing
+		_, _ = h.Write(buf[:])
+		for i := range rv.Len() {
+			hashValueReflect(h, rv.Index(i))
+		}
+
+	case reflect.Map:
+		keys := rv.MapKeys()
+		slices.SortFunc(keys, func(a, b reflect.Value) int {
+			return strings.Compare(fmt.Sprint(a.Interface()), fmt.Sprint(b.Interface()))
+		})
+
+		var buf [8]byte
+		binary.BigEndian.PutUint64(buf[:], uint64(len(keys)))
+		_, _ = h.Write(buf[:])
+
+		for _, k := range keys {
+			hashValueReflect(h, k)
+			hashValueReflect(h, rv.MapIndex(k))
+		}
+
+	case reflect.Interface, reflect.Pointer:
+		if rv.IsNil() {
+			_ = h.WriteByte(0)
+		} else {
+			hashValueReflect(h, rv.Elem())
+		}
+
+	default:
+		_, _ = fmt.Fprint(h, rv.Interface())
+	}
+}
+
+// deepEqualValue performs deep equality comparison for arbitrary values.
+// It uses type assertions for common types and falls back to reflection.
+func deepEqualValue(a, b any) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+
+	switch va := a.(type) {
+	case bool:
+		vb, ok := b.(bool)
+		return ok && va == vb
+
+	case float64:
+		vb, ok := b.(float64)
+		return ok && va == vb
+
+	case int:
+		vb, ok := b.(int)
+		return ok && va == vb
+
+	case string:
+		vb, ok := b.(string)
+		return ok && va == vb
+
+	case []any:
+		vb, ok := b.([]any)
+		if !ok || len(va) != len(vb) {
+			return false
+		}
+		for i := range va {
+			if !deepEqualValue(va[i], vb[i]) {
+				return false
+			}
+		}
+		return true
+
+	case map[string]any:
+		vb, ok := b.(map[string]any)
+		if !ok || len(va) != len(vb) {
+			return false
+		}
+		for k, v := range va {
+			vbVal, exists := vb[k]
+			if !exists || !deepEqualValue(v, vbVal) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return reflect.DeepEqual(a, b)
 }
 
 // Join joins the elements of a slice into a single string with a given separator.
