@@ -865,7 +865,7 @@ func BenchmarkTruncateWords(b *testing.B) {
 	var input strings.Builder
 	input.WriteString("This is a sample text with many words that we want to truncate at some point to test performance ")
 	for i := range 10 {
-		input.WriteString(fmt.Sprintf("word%d ", i))
+		fmt.Fprintf(&input, "word%d ", i)
 	}
 	b.ResetTimer()
 	for b.Loop() {
