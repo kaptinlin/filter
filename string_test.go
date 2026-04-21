@@ -435,6 +435,8 @@ func TestPluralize(t *testing.T) {
 		{2, "%d cat", "%d cats", "2 cats"},
 		{1, "%d mouse", "%d mice", "1 mouse"},
 		{2, "%d mouse", "%d mice", "2 mice"},
+		{1, "", "%d mice", "1 mice"},
+		{2, "%d mouse", "", "2 mouses"},
 	}
 
 	for _, tt := range tests {

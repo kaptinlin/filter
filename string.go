@@ -196,19 +196,20 @@ func Slugify(input string) string {
 // If the form string contains "%d", the count is substituted into the result.
 // Otherwise, only the appropriate form string is returned without the count.
 func Pluralize(count int, singular, plural string) string {
-	// Handle the case when count is exactly one.
+	result := plural
 	if count == 1 {
-		if singular != "" {
-			return formatPluralizeWithCount(count, singular)
+		result = singular
+		if result == "" {
+			result = inflection.Singular(plural)
 		}
-		return formatPluralizeWithCount(count, inflection.Singular(plural))
+	} else if result == "" {
+		result = inflection.Plural(singular)
 	}
 
-	// Handle the plural case.
-	if plural != "" {
-		return formatPluralizeWithCount(count, plural)
+	if strings.Contains(result, "%d") {
+		return fmt.Sprintf(result, count)
 	}
-	return formatPluralizeWithCount(count, inflection.Plural(singular))
+	return result
 }
 
 // Ordinalize converts a numeric input to its ordinal English version as a string.
@@ -550,12 +551,4 @@ func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 	parts = appendPart(parts, spaces, x.String())
 
 	return parts
-}
-
-// formatPluralizeWithCount formats the pluralization result with count if needed.
-func formatPluralizeWithCount(count int, result string) string {
-	if strings.Contains(result, "%d") {
-		return fmt.Sprintf(result, count)
-	}
-	return result
 }
