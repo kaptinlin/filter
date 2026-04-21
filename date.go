@@ -1,6 +1,6 @@
 package filter
 
-// Date formats a timestamp into a specified format. Returns a string representation of the date.
+// Date formats input with format. It returns the default date-time string when format is empty.
 func Date(input any, format string) (string, error) {
 	c, err := toCarbon(input)
 	if err != nil {
@@ -12,7 +12,7 @@ func Date(input any, format string) (string, error) {
 	return c.Format(format), nil
 }
 
-// Day extracts and returns the day of the month from the input date.
+// Day returns the day of the month.
 func Day(input any) (int, error) {
 	c, err := toCarbon(input)
 	if err != nil {
@@ -21,7 +21,7 @@ func Day(input any) (int, error) {
 	return c.Day(), nil
 }
 
-// Month extracts and returns the month number from the input date.
+// Month returns the month number.
 func Month(input any) (int, error) {
 	c, err := toCarbon(input)
 	if err != nil {
@@ -30,7 +30,7 @@ func Month(input any) (int, error) {
 	return c.Month(), nil
 }
 
-// MonthFull returns the full month name from the input date.
+// MonthFull returns the full month name.
 func MonthFull(input any) (string, error) {
 	c, err := toCarbon(input)
 	if err != nil {
@@ -39,7 +39,7 @@ func MonthFull(input any) (string, error) {
 	return c.ToMonthString(), nil
 }
 
-// Year extracts and returns the year from the input date.
+// Year returns the year.
 func Year(input any) (int, error) {
 	c, err := toCarbon(input)
 	if err != nil {
@@ -48,7 +48,7 @@ func Year(input any) (int, error) {
 	return c.Year(), nil
 }
 
-// Week returns the ISO week number from the input date.
+// Week returns the ISO week number.
 func Week(input any) (int, error) {
 	c, err := toCarbon(input)
 	if err != nil {
@@ -57,7 +57,7 @@ func Week(input any) (int, error) {
 	return c.WeekOfYear(), nil
 }
 
-// Weekday returns the day of the week from the input date.
+// Weekday returns the weekday name.
 func Weekday(input any) (string, error) {
 	c, err := toCarbon(input)
 	if err != nil {
@@ -66,8 +66,7 @@ func Weekday(input any) (string, error) {
 	return c.ToWeekString(), nil
 }
 
-// TimeAgo returns a human-readable string representing the time difference
-// between the current time and the input date.
+// TimeAgo returns the difference between input and now in human-readable form.
 func TimeAgo(input any) (string, error) {
 	c, err := toCarbon(input)
 	if err != nil {

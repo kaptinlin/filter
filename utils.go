@@ -8,7 +8,6 @@ import (
 	"github.com/dromara/carbon/v2"
 )
 
-// toCarbon converts input to a carbon.Carbon object, handling various input types.
 func toCarbon(input any) (*carbon.Carbon, error) {
 	switch v := input.(type) {
 	case carbon.Carbon:
@@ -28,7 +27,6 @@ func toCarbon(input any) (*carbon.Carbon, error) {
 	}
 }
 
-// toFloat64 converts input to a float64.
 func toFloat64(input any) (float64, error) {
 	switch v := input.(type) {
 	case int:

@@ -8,26 +8,12 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
-// Extract retrieves a value from input using dot-separated key notation.
-// It supports maps, slices, arrays, structs, pointers, and interfaces.
+// Extract returns the value at key from input using dot-separated paths.
 //
-// The key uses dot notation for nested access:
-//   - "user.name" accesses the "name" field of "user"
-//   - "items.0.title" accesses the "title" field of the first item
-//   - "matrix.1.0" accesses element [1][0] of a 2D array
-//
-// Supported input types:
-//   - map[string]interface{} and similar map types
-//   - []interface{} and other slice types
-//   - Arrays (including multi-dimensional)
-//   - Structs with json tags or exported field names
-//   - Pointers to any of the above
-//   - Interfaces containing any of the above
-//
-// Returns ErrUnsupportedType if input is nil.
-// Returns ErrKeyNotFound if the key path doesn't exist.
-// Returns ErrIndexOutOfRange for invalid array/slice indices.
-// Returns ErrInvalidKeyType for invalid path navigation.
+// Keys can traverse maps, arrays, slices, structs, pointers, and interfaces.
+// It returns ErrUnsupportedType when input is nil, ErrKeyNotFound when the
+// path is missing, ErrIndexOutOfRange for invalid indexes, and
+// ErrInvalidKeyType when a path step cannot be applied to the current value.
 func Extract(input any, key string) (any, error) {
 	if input == nil {
 		return nil, ErrUnsupportedType
@@ -47,7 +33,6 @@ func Extract(input any, key string) (any, error) {
 	return result, nil
 }
 
-// mapJSONPointerError maps jsonpointer errors to filter errors.
 func mapJSONPointerError(err error, key string) error {
 	switch {
 	case errors.Is(err, jsonpointer.ErrKeyNotFound), errors.Is(err, jsonpointer.ErrFieldNotFound):

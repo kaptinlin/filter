@@ -158,6 +158,32 @@ func TestCollectionFunctionsAdditionalBehaviors(t *testing.T) {
 	require.True(t, gotHas)
 }
 
+func TestSortAdditionalCases(t *testing.T) {
+	t.Parallel()
+
+	t.Run("keeps missing keyed values stable and first", func(t *testing.T) {
+		t.Parallel()
+
+		input := []any{
+			map[string]any{"name": "beta"},
+			map[string]any{"id": 1},
+			map[string]any{"name": "Alpha"},
+		}
+
+		got, err := Sort(input, "name")
+		require.NoError(t, err)
+
+		want := []any{
+			map[string]any{"id": 1},
+			map[string]any{"name": "Alpha"},
+			map[string]any{"name": "beta"},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Fatalf("Sort() mismatch (-want +got):\n%s", diff)
+		}
+	})
+}
+
 func TestSortNaturalAdditionalCases(t *testing.T) {
 	t.Parallel()
 

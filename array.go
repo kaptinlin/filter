@@ -13,9 +13,8 @@ import (
 	"strings"
 )
 
-// Unique removes duplicate elements from a slice.
-// It uses a comparable map for comparable types (fast path) and falls back
-// to hash-based deduplication for non-comparable types like slices and maps.
+// Unique removes duplicate elements while preserving their first-seen order.
+// Comparable values use a map fast path; non-comparable values fall back to hashing.
 func Unique(input any) ([]any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
@@ -26,7 +25,6 @@ func Unique(input any) ([]any, error) {
 		return []any{}, nil
 	}
 
-	// Check if all elements are comparable. If so, use the fast path.
 	allComparable := true
 	for _, item := range slice {
 		if item != nil && !reflect.TypeOf(item).Comparable() {
@@ -41,7 +39,6 @@ func Unique(input any) ([]any, error) {
 	return uniqueHash(slice), nil
 }
 
-// uniqueComparable deduplicates a slice where all elements are comparable types.
 func uniqueComparable(slice []any) []any {
 	seen := make(map[any]struct{}, len(slice))
 	result := make([]any, 0, len(slice))
@@ -54,11 +51,8 @@ func uniqueComparable(slice []any) []any {
 	return result
 }
 
-// uniqueHash deduplicates a slice using maphash for non-comparable types.
-// It hashes each value deterministically and only performs deep equality checks
-// on hash collisions.
 func uniqueHash(slice []any) []any {
-	hashes := make(map[uint64][]int, len(slice)) // hash -> indices in result
+	hashes := make(map[uint64][]int, len(slice))
 	seed := maphash.MakeSeed()
 	result := make([]any, 0, len(slice))
 
@@ -86,8 +80,6 @@ func uniqueHash(slice []any) []any {
 	return result
 }
 
-// hashValue writes a deterministic hash of a value to the hasher.
-// It uses type assertions for common types and falls back to reflection.
 func hashValue(h *maphash.Hash, v any) {
 	switch val := v.(type) {
 	case nil:
@@ -138,7 +130,6 @@ func hashValue(h *maphash.Hash, v any) {
 	}
 }
 
-// hashValueReflect handles hashing for types that need reflection.
 func hashValueReflect(h *maphash.Hash, rv reflect.Value) {
 	if !rv.IsValid() {
 		_ = h.WriteByte(0)
@@ -207,8 +198,6 @@ func hashValueReflect(h *maphash.Hash, rv reflect.Value) {
 	}
 }
 
-// deepEqualValue performs deep equality comparison for arbitrary values.
-// It uses type assertions for common types and falls back to reflection.
 func deepEqualValue(a, b any) bool {
 	if a == nil && b == nil {
 		return true

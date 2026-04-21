@@ -105,8 +105,8 @@ func Titleize(input string) string {
 	return result.String()
 }
 
-// Capitalize capitalizes the first letter and lowercases the rest.
-// This matches Liquid's capitalize behavior.
+// Capitalize returns input with the first rune title-cased and the rest lower-cased.
+// It matches Liquid's capitalize behavior.
 func Capitalize(input string) string {
 	if input == "" {
 		return ""
@@ -116,8 +116,7 @@ func Capitalize(input string) string {
 	return string(runes)
 }
 
-// Camelize converts a string to camelCase. It lowercases the first letter
-// of the first segment and capitalizes the first letter of each subsequent segment.
+// Camelize converts input to camelCase.
 func Camelize(input string) string {
 	parts := toParts(input, defaultSpaceRunes, true)
 	builder := strings.Builder{}
@@ -154,7 +153,7 @@ func Camelize(input string) string {
 	return builder.String()
 }
 
-// Pascalize converts a string to PascalCase, capitalizing the first letter of each segment.
+// Pascalize converts input to PascalCase.
 func Pascalize(input string) string {
 	if input == "" {
 		return ""
@@ -166,8 +165,7 @@ func Pascalize(input string) string {
 	return string(unicode.ToUpper(r)) + camelized[size:]
 }
 
-// Dasherize converts a string to a lowercased, dashed string,
-// removing non-alphanumeric characters.
+// Dasherize converts input to lowercase words joined by dashes.
 func Dasherize(input string) string {
 	parts := toParts(input, defaultSpaceRunes, true)
 	result := make([]string, 0, len(parts))
@@ -186,15 +184,13 @@ func Dasherize(input string) string {
 	return strings.Join(result, "-")
 }
 
-// Slugify converts a string into a URL-friendly "slug", transliterating
-// Unicode characters to ASCII and replacing or removing special characters.
+// Slugify converts input to a URL-friendly slug.
 func Slugify(input string) string {
 	return slug.Make(input)
 }
 
-// Pluralize returns the singular or plural form of a string based on count.
-// If the form string contains "%d", the count is substituted into the result.
-// Otherwise, only the appropriate form string is returned without the count.
+// Pluralize returns the singular or plural form selected by count.
+// When the selected form contains %d, Pluralize formats count into it.
 func Pluralize(count int, singular, plural string) string {
 	result := plural
 	if count == 1 {
@@ -230,8 +226,8 @@ func Ordinalize(number int) string {
 	return strconv.Itoa(number) + suffix
 }
 
-// Truncate truncates a string to maxLength characters (including ellipsis).
-// An optional ellipsis string can be provided (default "...").
+// Truncate shortens input to maxLength runes.
+// It uses "..." when ellipsis is omitted.
 func Truncate(input string, maxLength int, ellipsis ...string) string {
 	omission := "..."
 	if len(ellipsis) > 0 {
@@ -251,8 +247,8 @@ func Truncate(input string, maxLength int, ellipsis ...string) string {
 	return string(runes[:maxLength-len(omissionRunes)]) + omission
 }
 
-// TruncateWords truncates a string to a specified number of words.
-// An optional ellipsis string can be provided (default "...").
+// TruncateWords shortens input to maxWords words.
+// It uses "..." when ellipsis is omitted.
 func TruncateWords(input string, maxWords int, ellipsis ...string) string {
 	omission := "..."
 	if len(ellipsis) > 0 {
@@ -301,7 +297,6 @@ func TruncateWords(input string, maxWords int, ellipsis ...string) string {
 	return truncated + omission
 }
 
-// Package-level compiled regexps for HTML processing.
 var (
 	htmlScriptRe  = regexp.MustCompile(`(?is)<script.*?</script>`)
 	htmlStyleRe   = regexp.MustCompile(`(?is)<style.*?</style>`)
@@ -309,18 +304,17 @@ var (
 	htmlTagRe     = regexp.MustCompile(`<[^>]*>`)
 )
 
-// Escape converts <, >, &, ", ' to HTML entities.
+// Escape escapes HTML special characters in input.
 func Escape(input string) string {
 	return html.EscapeString(input)
 }
 
-// EscapeOnce converts <, >, &, ", ' to HTML entities without double-escaping.
-// Already escaped entities like &amp; &lt; &#39; are preserved.
+// EscapeOnce escapes HTML special characters without double-escaping entities.
 func EscapeOnce(input string) string {
 	return html.EscapeString(html.UnescapeString(input))
 }
 
-// StripHTML removes all HTML tags, script blocks, style blocks, and comments from the input.
+// StripHTML removes tags, script blocks, style blocks, and comments from input.
 func StripHTML(input string) string {
 	s := htmlScriptRe.ReplaceAllString(input, "")
 	s = htmlStyleRe.ReplaceAllString(s, "")
@@ -329,23 +323,21 @@ func StripHTML(input string) string {
 	return s
 }
 
-// newlineReplacer is a package-level replacer for stripping newlines,
-// avoiding repeated allocation on each call.
 var newlineReplacer = strings.NewReplacer("\r\n", "", "\r", "", "\n", "")
 
-// StripNewlines removes all newline characters (\n, \r\n, \r) from the input.
+// StripNewlines removes newline characters from input.
 func StripNewlines(input string) string {
 	return newlineReplacer.Replace(input)
 }
 
-// TrimLeft removes leading whitespace from a string.
-// Liquid equivalent: lstrip.
+// TrimLeft removes leading whitespace from input.
+// It matches Liquid's lstrip filter.
 func TrimLeft(input string) string {
 	return strings.TrimLeftFunc(input, unicode.IsSpace)
 }
 
-// TrimRight removes trailing whitespace from a string.
-// Liquid equivalent: rstrip.
+// TrimRight removes trailing whitespace from input.
+// It matches Liquid's rstrip filter.
 func TrimRight(input string) string {
 	return strings.TrimRightFunc(input, unicode.IsSpace)
 }
@@ -380,11 +372,9 @@ func RemoveLast(input, toRemove string) string {
 	return ReplaceLast(input, toRemove, "")
 }
 
-// Slice extracts a substring or sub-slice.
-// For strings: returns substring starting at offset with optional length.
-// For slices: returns sub-slice starting at offset with optional length.
-// Negative offset counts from end (-1 = last element).
-// If length is omitted, returns single character/element.
+// Slice returns a substring or sub-slice starting at offset.
+// Negative offsets count from the end. When length is omitted, Slice returns
+// one element or rune.
 func Slice(input any, offset int, length ...int) (any, error) {
 	switch v := input.(type) {
 	case string:
@@ -398,8 +388,6 @@ func Slice(input any, offset int, length ...int) (any, error) {
 	}
 }
 
-// sliceString extracts a substring from s starting at offset with optional size.
-// Negative offset counts from end. Returns single rune if size is omitted.
 func sliceString(s string, offset int, length ...int) string {
 	runes := []rune(s)
 	n := len(runes)
@@ -423,8 +411,6 @@ func sliceString(s string, offset int, length ...int) string {
 	return string(runes[offset:end])
 }
 
-// sliceReflect extracts a sub-slice from rv starting at offset with optional size.
-// Negative offset counts from end. Returns single element if size is omitted.
 func sliceReflect(rv reflect.Value, offset int, length ...int) []any {
 	n := rv.Len()
 	if n == 0 {
@@ -479,7 +465,6 @@ func Base64Decode(input string) (string, error) {
 	return string(b), nil
 }
 
-// appendPart appends parts of a string to a slice after trimming spaces.
 func appendPart(a []string, spaces []rune, ss ...string) []string {
 	for _, s := range ss {
 		s = strings.TrimSpace(s)
@@ -496,7 +481,6 @@ func appendPart(a []string, spaces []rune, ss ...string) []string {
 	return a
 }
 
-// toParts splits a string into parts, considering acronyms and separators.
 func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 	parts := []string{}
 	s = strings.TrimSpace(s)

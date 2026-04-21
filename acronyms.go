@@ -1,20 +1,6 @@
-// Package filter provides template filter functions for transforming data
-// in template rendering pipelines. It supports:
-//   - String manipulation: case conversion, truncation, slugification
-//   - Array operations: unique, sort, shuffle, aggregation
-//   - Date formatting: date parsing, component extraction, relative time
-//   - Number formatting: numeric formatting, byte humanization
-//   - Math operations: arithmetic, rounding, clamping
-//
-// All functions accept interface{} inputs for maximum flexibility
-// in dynamic template contexts.
-//
-// The package does not expose Must* APIs. Public functions return errors for
-// runtime input problems instead of panicking, and no public functions are
-// intended to panic.
 package filter
 
-// baseAcronyms lists common acronyms that should be capitalized when found in a string.
+// baseAcronyms preserves known acronyms during case conversion.
 var baseAcronyms = map[string]string{
 	"ID": "ID",
 }

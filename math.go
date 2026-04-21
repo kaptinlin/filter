@@ -1,10 +1,8 @@
 package filter
 
-import (
-	"math"
-)
+import "math"
 
-// Abs returns the absolute value of the input.
+// Abs returns the absolute value of input.
 func Abs(input any) (float64, error) {
 	val, err := toFloat64(input)
 	if err != nil {
@@ -39,7 +37,7 @@ func AtMost(input, maximum any) (float64, error) {
 	return min(val, maxVal), nil
 }
 
-// Round rounds the input to the specified number of decimal places.
+// Round rounds input to precision decimal places.
 func Round(input, precision any) (float64, error) {
 	val, err := toFloat64(input)
 	if err != nil {
@@ -53,7 +51,7 @@ func Round(input, precision any) (float64, error) {
 	return math.Round(val*multiplier) / multiplier, nil
 }
 
-// Floor rounds the input down to the nearest whole number.
+// Floor rounds input down to the nearest whole number.
 func Floor(input any) (float64, error) {
 	val, err := toFloat64(input)
 	if err != nil {
@@ -62,7 +60,7 @@ func Floor(input any) (float64, error) {
 	return math.Floor(val), nil
 }
 
-// Ceil rounds the input up to the nearest whole number.
+// Ceil rounds input up to the nearest whole number.
 func Ceil(input any) (float64, error) {
 	val, err := toFloat64(input)
 	if err != nil {
@@ -71,7 +69,6 @@ func Ceil(input any) (float64, error) {
 	return math.Ceil(val), nil
 }
 
-// binaryOp is a helper for binary arithmetic operations.
 func binaryOp(a, b any, op func(float64, float64) (float64, error)) (float64, error) {
 	x, err := toFloat64(a)
 	if err != nil {
@@ -115,7 +112,7 @@ func Divide(input, divisor any) (float64, error) {
 	})
 }
 
-// Modulo returns the remainder of the division of the first value by the second.
+// Modulo returns the remainder of dividing the first value by the second.
 func Modulo(input, modulus any) (float64, error) {
 	return binaryOp(input, modulus, func(a, b float64) (float64, error) {
 		if b == 0 {
