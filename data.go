@@ -37,13 +37,10 @@ func Extract(input any, key string) (any, error) {
 		return nil, ErrKeyNotFound
 	}
 
-	// Convert dot notation to JSON Pointer path parts
 	parts := strings.Split(key, ".")
 
-	// Use jsonpointer.Get which handles all the complex cases including array bounds
 	result, err := jsonpointer.Get(input, parts...)
 	if err != nil {
-		// Map jsonpointer errors to filter errors for consistency
 		return nil, mapJSONPointerError(err, key)
 	}
 
@@ -53,15 +50,11 @@ func Extract(input any, key string) (any, error) {
 // mapJSONPointerError maps jsonpointer errors to filter errors.
 func mapJSONPointerError(err error, key string) error {
 	switch {
-	case errors.Is(err, jsonpointer.ErrKeyNotFound):
-		return fmt.Errorf("%w: %s", ErrKeyNotFound, key)
-	case errors.Is(err, jsonpointer.ErrFieldNotFound):
+	case errors.Is(err, jsonpointer.ErrKeyNotFound), errors.Is(err, jsonpointer.ErrFieldNotFound):
 		return fmt.Errorf("%w: %s", ErrKeyNotFound, key)
 	case errors.Is(err, jsonpointer.ErrIndexOutOfBounds):
 		return fmt.Errorf("%w: %s", ErrIndexOutOfRange, key)
-	case errors.Is(err, jsonpointer.ErrInvalidIndex):
-		return fmt.Errorf("%w: %s", ErrInvalidKeyType, key)
-	case errors.Is(err, jsonpointer.ErrInvalidPathStep):
+	case errors.Is(err, jsonpointer.ErrInvalidIndex), errors.Is(err, jsonpointer.ErrInvalidPathStep):
 		return fmt.Errorf("%w: %s", ErrInvalidKeyType, key)
 	case errors.Is(err, jsonpointer.ErrNilPointer):
 		return fmt.Errorf("%w: cannot navigate through nil pointer in %s", ErrInvalidKeyType, key)

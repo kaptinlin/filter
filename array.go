@@ -42,11 +42,11 @@ func Unique(input any) ([]any, error) {
 
 // uniqueComparable deduplicates a slice where all elements are comparable types.
 func uniqueComparable(slice []any) []any {
-	seen := make(map[any]bool, len(slice))
+	seen := make(map[any]struct{}, len(slice))
 	result := make([]any, 0, len(slice))
 	for _, item := range slice {
-		if !seen[item] {
-			seen[item] = true
+		if _, ok := seen[item]; !ok {
+			seen[item] = struct{}{}
 			result = append(result, item)
 		}
 	}
@@ -431,7 +431,10 @@ func Average(input any) (float64, error) {
 		return 0, ErrEmptySlice
 	}
 
-	sum, _ := Sum(input)
+	var sum float64
+	for _, val := range slice {
+		sum += val
+	}
 	return sum / float64(len(slice)), nil
 }
 

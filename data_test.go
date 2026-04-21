@@ -1,9 +1,11 @@
 package filter
 
 import (
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/kaptinlin/jsonpointer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1163,6 +1165,88 @@ func TestExtractInterfaceHandling(t *testing.T) {
 			_, err := Extract(interfaceData, tt.key)
 			require.Error(t, err)
 			require.ErrorIs(t, err, tt.errorType)
+		})
+	}
+}
+
+func TestMapJSONPointerError(t *testing.T) {
+	tests := []struct {
+		name    string
+		err     error
+		key     string
+		wantIs  error
+		wantMsg string
+	}{
+		{
+			name:    "key not found",
+			err:     jsonpointer.ErrKeyNotFound,
+			key:     "user.name",
+			wantIs:  ErrKeyNotFound,
+			wantMsg: "user.name",
+		},
+		{
+			name:    "field not found",
+			err:     jsonpointer.ErrFieldNotFound,
+			key:     "user.name",
+			wantIs:  ErrKeyNotFound,
+			wantMsg: "user.name",
+		},
+		{
+			name:    "index out of bounds",
+			err:     jsonpointer.ErrIndexOutOfBounds,
+			key:     "items.10",
+			wantIs:  ErrIndexOutOfRange,
+			wantMsg: "items.10",
+		},
+		{
+			name:    "invalid index",
+			err:     jsonpointer.ErrInvalidIndex,
+			key:     "items.invalid",
+			wantIs:  ErrInvalidKeyType,
+			wantMsg: "items.invalid",
+		},
+		{
+			name:    "invalid path step",
+			err:     jsonpointer.ErrInvalidPathStep,
+			key:     "items.invalid",
+			wantIs:  ErrInvalidKeyType,
+			wantMsg: "items.invalid",
+		},
+		{
+			name:    "nil pointer",
+			err:     jsonpointer.ErrNilPointer,
+			key:     "user.profile.name",
+			wantIs:  ErrInvalidKeyType,
+			wantMsg: "cannot navigate through nil pointer in user.profile.name",
+		},
+		{
+			name:    "not found with dotted key",
+			err:     jsonpointer.ErrNotFound,
+			key:     "user.profile.name",
+			wantIs:  ErrInvalidKeyType,
+			wantMsg: ErrInvalidKeyType.Error(),
+		},
+		{
+			name:    "not found with flat key",
+			err:     jsonpointer.ErrNotFound,
+			key:     "user",
+			wantIs:  ErrKeyNotFound,
+			wantMsg: "user",
+		},
+		{
+			name:    "fallback wraps original error",
+			err:     errors.New("boom"),
+			key:     "user",
+			wantIs:  ErrInvalidKeyType,
+			wantMsg: "boom",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := mapJSONPointerError(tt.err, tt.key)
+			require.ErrorIs(t, err, tt.wantIs)
+			require.ErrorContains(t, err, tt.wantMsg)
 		})
 	}
 }

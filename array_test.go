@@ -661,6 +661,12 @@ func TestAverage(t *testing.T) {
 			expectErr: false,
 		},
 		{
+			name:      "Typed int slice",
+			input:     []int{1, 2, 3},
+			want:      2.0,
+			expectErr: false,
+		},
+		{
 			name:      "Empty slice",
 			input:     []any{},
 			want:      0.0,

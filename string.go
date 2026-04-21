@@ -479,11 +479,6 @@ func Base64Decode(input string) (string, error) {
 	return string(b), nil
 }
 
-// isSpace checks if a rune is a word separator.
-func isSpace(c rune, spaces []rune) bool {
-	return slices.Contains(spaces, c) || unicode.IsSpace(c)
-}
-
 // appendPart appends parts of a string to a slice after trimming spaces.
 func appendPart(a []string, spaces []rune, ss ...string) []string {
 	for _, s := range ss {
@@ -519,7 +514,7 @@ func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 			continue
 		}
 
-		if isSpace(c, spaces) {
+		if slices.Contains(spaces, c) || unicode.IsSpace(c) {
 			parts = appendPart(parts, spaces, x.String())
 			x.Reset()
 			x.WriteRune(c)
