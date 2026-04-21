@@ -77,7 +77,7 @@ func TestExtractMap(t *testing.T) {
 		},
 		{
 			name:     "typed_nested_map_and_slice",
-			input:    map[string][]map[string]int{"groups": []map[string]int{{"id": 42}}},
+			input:    map[string][]map[string]int{"groups": {{"id": 42}}},
 			key:      "groups.0.id",
 			expected: 42,
 		},

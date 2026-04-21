@@ -60,3 +60,14 @@ ANALYSIS.md
 
 # Meeting records
 .meetings/
+
+# Additional baseline config ignores
+improve*.md
+refactor*.md
+plan*.md
+.plan/*.md
+.plans/*
+reports/*
+TODO*.md
+.vscode/
+.ralphy/*.json

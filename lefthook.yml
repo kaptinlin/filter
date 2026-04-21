@@ -1,8 +1,5 @@
 # Lefthook configuration
 # https://github.com/evilmartians/lefthook
-#
-# Install: lefthook install
-# Run:     lefthook run pre-commit
 
 output:
   - summary
@@ -13,8 +10,9 @@ pre-commit:
   jobs:
     - name: trailing-whitespace
       glob: "*.{go,yml,yaml,json,md,mod,sum}"
-      stage_fixed: true
-      run: sed -i '' 's/[[:space:]]*$//' {staged_files}
+      run: >
+        sed -i '' 's/[[:space:]]*$//' {staged_files} &&
+        git add {staged_files}
 
     - name: gitleaks
       run: gitleaks protect --staged --no-banner
@@ -29,6 +27,9 @@ pre-commit:
 
     - name: markdownlint
       glob: "*.md"
+      exclude:
+        - ".research/**/*.md"
+        - "SPECS/**/*.md"
       run: markdownlint-cli2 {staged_files}
 
     - name: yamllint
