@@ -58,6 +58,21 @@ func TestUnique(t *testing.T) {
 	}
 }
 
+func TestUnique_NonComparableValues(t *testing.T) {
+	input := []any{
+		map[string]any{"name": "shirt", "meta": []any{"blue", 42}},
+		map[string]any{"name": "shirt", "meta": []any{"blue", 42}},
+		map[string]any{"name": "pants", "meta": []any{"black", 40}},
+	}
+
+	got, err := Unique(input)
+	require.NoError(t, err)
+	require.Equal(t, []any{
+		map[string]any{"name": "shirt", "meta": []any{"blue", 42}},
+		map[string]any{"name": "pants", "meta": []any{"black", 40}},
+	}, got)
+}
+
 func TestJoin(t *testing.T) {
 	tests := []struct {
 		name      string

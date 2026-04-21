@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash/maphash"
+	"maps"
 	"math"
 	"math/rand/v2"
 	"reflect"
@@ -121,11 +122,7 @@ func hashValue(h *maphash.Hash, v any) {
 		}
 
 	case map[string]any:
-		keys := make([]string, 0, len(val))
-		for k := range val {
-			keys = append(keys, k)
-		}
-		slices.Sort(keys)
+		keys := slices.Sorted(maps.Keys(val))
 
 		var buf [8]byte
 		binary.BigEndian.PutUint64(buf[:], uint64(len(keys)))
@@ -239,28 +236,11 @@ func deepEqualValue(a, b any) bool {
 
 	case []any:
 		vb, ok := b.([]any)
-		if !ok || len(va) != len(vb) {
-			return false
-		}
-		for i := range va {
-			if !deepEqualValue(va[i], vb[i]) {
-				return false
-			}
-		}
-		return true
+		return ok && slices.EqualFunc(va, vb, deepEqualValue)
 
 	case map[string]any:
 		vb, ok := b.(map[string]any)
-		if !ok || len(va) != len(vb) {
-			return false
-		}
-		for k, v := range va {
-			vbVal, exists := vb[k]
-			if !exists || !deepEqualValue(v, vbVal) {
-				return false
-			}
-		}
-		return true
+		return ok && maps.EqualFunc(va, vb, deepEqualValue)
 	}
 
 	return reflect.DeepEqual(a, b)
@@ -586,16 +566,10 @@ func FindIndex(input any, key string, value any) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	for i, item := range slice {
+	return slices.IndexFunc(slice, func(item any) bool {
 		v, err := Extract(item, key)
-		if err != nil {
-			continue
-		}
-		if valuesEqual(v, value) {
-			return i, nil
-		}
-	}
-	return -1, nil
+		return err == nil && valuesEqual(v, value)
+	}), nil
 }
 
 // Has returns true if any element in the slice has a property matching the given criteria.
@@ -606,12 +580,9 @@ func Has(input any, key string, value ...any) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	for _, item := range slice {
-		if matchesCriteria(item, key, value...) {
-			return true, nil
-		}
-	}
-	return false, nil
+	return slices.ContainsFunc(slice, func(item any) bool {
+		return matchesCriteria(item, key, value...)
+	}), nil
 }
 
 // extractOrSelf extracts the value at key from a and b when a key is provided.
