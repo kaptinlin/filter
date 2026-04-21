@@ -691,9 +691,13 @@ func valuesEqual(a, b any) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	if a == b {
+
+	ta := reflect.TypeOf(a)
+	tb := reflect.TypeOf(b)
+	if ta.Comparable() && tb.Comparable() && a == b {
 		return true
 	}
+
 	fa, errA := toFloat64(a)
 	fb, errB := toFloat64(b)
 	if errA == nil && errB == nil {

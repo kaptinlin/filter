@@ -1146,6 +1146,19 @@ func TestWhere(t *testing.T) {
 	}
 }
 
+func TestWhereWithNonComparableValue(t *testing.T) {
+	products := []any{
+		map[string]any{"name": "Shoes", "tags": []any{"sale", "new"}},
+		map[string]any{"name": "Shirt", "tags": []any{"clearance"}},
+	}
+
+	got, err := Where(products, "tags", []any{"sale", "new"})
+	require.NoError(t, err)
+	require.Equal(t, []any{
+		map[string]any{"name": "Shoes", "tags": []any{"sale", "new"}},
+	}, got)
+}
+
 func TestReject(t *testing.T) {
 	products := []any{
 		map[string]any{"name": "Shoes", "available": true},

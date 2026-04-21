@@ -8,6 +8,10 @@
 //
 // All functions accept interface{} inputs for maximum flexibility
 // in dynamic template contexts.
+//
+// The package does not expose Must* APIs. Public functions return errors for
+// runtime input problems instead of panicking, and no public functions are
+// intended to panic.
 package filter
 
 // baseAcronyms lists common acronyms that should be capitalized when found in a string.
