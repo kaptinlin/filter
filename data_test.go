@@ -325,6 +325,26 @@ func TestExtractNestedStruct(t *testing.T) {
 	}
 }
 
+func TestExtractStructFieldWithEmbeddedFieldOrder(t *testing.T) {
+	type EmbeddedName struct {
+		EmbeddedName string `json:"embedded_name"`
+	}
+
+	type EmbeddedUser struct {
+		EmbeddedName
+		Name string `json:"name"`
+	}
+
+	user := EmbeddedUser{
+		EmbeddedName: EmbeddedName{EmbeddedName: "embedded"},
+		Name:         "top-level",
+	}
+
+	result, err := Extract(user, "name")
+	require.NoError(t, err)
+	assert.Equal(t, "top-level", result)
+}
+
 // TestExtractStructWithMap tests structures containing maps
 func TestExtractStructWithMap(t *testing.T) {
 	type Location struct {

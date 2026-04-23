@@ -8,7 +8,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/gosimple/slug v1.15.0
 	github.com/jinzhu/inflection v1.0.0
-	github.com/kaptinlin/jsonpointer v0.4.18
+	github.com/kaptinlin/jsonpointer v0.4.19
 	github.com/stretchr/testify v1.11.1
 )
 
