@@ -291,9 +291,9 @@ func TruncateWords(input string, maxWords int, ellipsis ...string) string {
 	}
 
 	truncated := strings.Join(words[:maxWords], "")
-	if len(truncated) > 0 {
-		truncated = truncated[:len(truncated)-1]
-	}
+	truncated = strings.TrimRightFunc(truncated, func(r rune) bool {
+		return unicode.IsSpace(r) || unicode.IsPunct(r)
+	})
 	return truncated + omission
 }
 

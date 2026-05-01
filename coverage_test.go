@@ -3,6 +3,7 @@ package filter
 import (
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/dromara/carbon/v2"
 	"github.com/google/go-cmp/cmp"
@@ -147,7 +148,10 @@ func TestCollectionFunctionsAdditionalBehaviors(t *testing.T) {
 
 	gotFind, err := Find(items, "count", "10")
 	require.NoError(t, err)
-	require.Equal(t, map[string]any{"flag": true, "count": int64(10)}, gotFind)
+	wantFind := map[string]any{"flag": true, "count": int64(10)}
+	if diff := cmp.Diff(wantFind, gotFind); diff != "" {
+		t.Fatalf("Find() mismatch (-want +got):\n%s", diff)
+	}
 
 	gotIndex, err := FindIndex([]any{}, "count", 1)
 	require.NoError(t, err)
@@ -296,4 +300,111 @@ func TestDateAcceptsCarbonPointer(t *testing.T) {
 	got, err := Date(input, "Y-m-d")
 	require.NoError(t, err)
 	require.Equal(t, "2024-03-30", got)
+}
+
+func TestDateErrorsPreserveSentinels(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		input   any
+		wantErr error
+	}{
+		{name: "invalid time format", input: "not-a-date", wantErr: ErrInvalidTimeFormat},
+		{name: "unsupported input type", input: struct{}{}, wantErr: ErrUnsupportedType},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := Date(tc.input, "Y-m-d")
+			require.ErrorIs(t, err, tc.wantErr)
+		})
+	}
+}
+
+func TestDecodeErrorsPreserveInvalidArguments(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		call func() error
+	}{
+		{name: "url decode", call: func() error { _, err := URLDecode("%ZZ"); return err }},
+		{name: "base64 decode", call: func() error { _, err := Base64Decode("invalid!base64"); return err }},
+		{name: "join empty separator", call: func() error { _, err := Join([]string{"a", "b"}, ""); return err }},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			require.ErrorIs(t, tc.call(), ErrInvalidArguments)
+		})
+	}
+}
+
+func TestSizeRejectsUnsupportedTypes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input any
+	}{
+		{name: "nil", input: nil},
+		{name: "scalar", input: 1},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := Size(tc.input)
+			require.ErrorIs(t, err, ErrUnsupportedSizeType)
+		})
+	}
+}
+
+func TestSliceAdditionalBoundaries(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		input   any
+		offset  int
+		length  []int
+		want    any
+		wantErr error
+	}{
+		{name: "typed slice", input: []int{1, 2, 3}, offset: 1, length: []int{2}, want: []any{2, 3}},
+		{name: "array", input: [3]string{"a", "b", "c"}, offset: -2, length: []int{1}, want: []any{"b"}},
+		{name: "zero length", input: []int{1, 2, 3}, offset: 1, length: []int{0}, want: []any{}},
+		{name: "negative length", input: []int{1, 2, 3}, offset: 1, length: []int{-1}, want: []any{}},
+		{name: "unsupported type", input: nil, offset: 0, wantErr: ErrUnsupportedType},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := Slice(tc.input, tc.offset, tc.length...)
+			if tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr)
+				return
+			}
+
+			require.NoError(t, err)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatalf("Slice() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestTruncateWordsKeepsUTF8ValidWhenDroppingPunctuation(t *testing.T) {
+	t.Parallel()
+
+	got := TruncateWords("hello。 world", 1)
+	require.True(t, utf8.ValidString(got))
+	require.Equal(t, "hello...", got)
 }
