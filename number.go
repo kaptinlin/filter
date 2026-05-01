@@ -1,8 +1,6 @@
 package filter
 
-import (
-	"github.com/dustin/go-humanize"
-)
+import "github.com/dustin/go-humanize"
 
 // Number formats a numeric value according to the specified format string.
 func Number(input any, format string) (string, error) {

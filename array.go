@@ -515,7 +515,6 @@ func Where(input any, key string, value ...any) ([]any, error) {
 
 // Reject filters a slice, removing elements where the given property equals the given value.
 // If value is omitted, removes elements where the property is truthy.
-// Inverse of Where.
 func Reject(input any, key string, value ...any) ([]any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
@@ -574,8 +573,7 @@ func Has(input any, key string, value ...any) (bool, error) {
 	}), nil
 }
 
-// extractOrSelf extracts the value at key from a and b when a key is provided.
-// Falls back to the elements themselves when key is empty or extraction fails.
+// extractOrSelf extracts values at key, or returns the values unchanged when key is empty.
 func extractOrSelf(a, b any, key ...string) (any, any) {
 	if len(key) > 0 && key[0] != "" {
 		va, errA := Extract(a, key[0])
@@ -608,25 +606,15 @@ func matchesCriteria(item any, key string, value ...any) bool {
 // compareValues compares two values for sorting.
 // Numbers are compared numerically, everything else as strings.
 func compareValues(a, b any) int {
-	if a == nil && b == nil {
-		return 0
-	}
-	if a == nil {
-		return -1
-	}
-	if b == nil {
-		return 1
-	}
-	fa, errA := toFloat64(a)
-	fb, errB := toFloat64(b)
-	if errA == nil && errB == nil {
-		return cmp.Compare(fa, fb)
-	}
-	return cmp.Compare(fmt.Sprint(a), fmt.Sprint(b))
+	return compareValuesBy(a, b, func(s string) string { return s })
 }
 
 // compareValuesNatural compares two values case-insensitively for natural sorting.
 func compareValuesNatural(a, b any) int {
+	return compareValuesBy(a, b, strings.ToLower)
+}
+
+func compareValuesBy(a, b any, normalize func(string) string) int {
 	if a == nil && b == nil {
 		return 0
 	}
@@ -641,9 +629,7 @@ func compareValuesNatural(a, b any) int {
 	if errA == nil && errB == nil {
 		return cmp.Compare(fa, fb)
 	}
-	sa := strings.ToLower(fmt.Sprint(a))
-	sb := strings.ToLower(fmt.Sprint(b))
-	return cmp.Compare(sa, sb)
+	return cmp.Compare(normalize(fmt.Sprint(a)), normalize(fmt.Sprint(b)))
 }
 
 // valuesEqual checks if two values are equal, handling numeric type differences.

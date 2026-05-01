@@ -94,7 +94,7 @@ func Titleize(input string) string {
 
 		runes := []rune(part)
 		for j, r := range runes {
-			if j == 0 || (j > 0 && runes[j-1] == '-') {
+			if j == 0 || runes[j-1] == '-' {
 				result.WriteRune(unicode.ToTitle(r))
 			} else {
 				result.WriteRune(r)
