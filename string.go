@@ -431,8 +431,8 @@ func sliceReflect(rv reflect.Value, offset int, length ...int) []any {
 	}
 	end := min(offset+size, n)
 	result := make([]any, end-offset)
-	for i := offset; i < end; i++ {
-		result[i-offset] = rv.Index(i).Interface()
+	for i := range end - offset {
+		result[i] = rv.Index(offset + i).Interface()
 	}
 	return result
 }

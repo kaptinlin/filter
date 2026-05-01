@@ -761,6 +761,7 @@ func TestSlice(t *testing.T) {
 		{"Slice single element", []any{1, 2, 3, 4}, 1, nil, []any{2}, false},
 		{"Slice with length", []any{1, 2, 3, 4}, 1, []int{2}, []any{2, 3}, false},
 		{"Slice negative offset", []any{1, 2, 3, 4}, -2, []int{2}, []any{3, 4}, false},
+		{"Typed slice with offset", []string{"a", "b", "c", "d"}, 1, []int{2}, []any{"b", "c"}, false},
 		{"Slice out of bounds", []any{1, 2, 3}, 10, nil, []any{}, false},
 		{"Invalid type", 123, 0, nil, nil, true},
 	}
