@@ -173,7 +173,7 @@ func hashValueReflect(h *maphash.Hash, rv reflect.Value) {
 	case reflect.Map:
 		keys := rv.MapKeys()
 		slices.SortFunc(keys, func(a, b reflect.Value) int {
-			return strings.Compare(fmt.Sprint(a.Interface()), fmt.Sprint(b.Interface()))
+			return cmp.Compare(fmt.Sprint(a.Interface()), fmt.Sprint(b.Interface()))
 		})
 
 		var buf [8]byte
