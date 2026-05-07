@@ -162,6 +162,30 @@ func TestCollectionFunctionsAdditionalBehaviors(t *testing.T) {
 	require.True(t, gotHas)
 }
 
+func TestWhereTreatsNonNilNonFalseValuesAsTruthy(t *testing.T) {
+	t.Parallel()
+
+	items := []any{
+		map[string]any{"flag": 0},
+		map[string]any{"flag": ""},
+		map[string]any{"flag": []any{}},
+		map[string]any{"flag": false},
+		map[string]any{"flag": nil},
+	}
+
+	got, err := Where(items, "flag")
+	require.NoError(t, err)
+
+	want := []any{
+		map[string]any{"flag": 0},
+		map[string]any{"flag": ""},
+		map[string]any{"flag": []any{}},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("Where() mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestSortAdditionalCases(t *testing.T) {
 	t.Parallel()
 

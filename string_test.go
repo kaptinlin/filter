@@ -2,14 +2,16 @@ package filter
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDefault(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		input        any
@@ -34,6 +36,8 @@ func TestDefault(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			actual := Default(tt.input, tt.defaultValue)
 			require.Equal(t, tt.expected, actual)
 		})
@@ -41,6 +45,8 @@ func TestDefault(t *testing.T) {
 }
 
 func TestTrim(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    string
@@ -59,6 +65,8 @@ func TestTrim(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			actual := Trim(tt.input)
 			if actual != tt.expected {
 				t.Errorf("Test '%s' failed. Expected '%s', got '%s'", tt.name, tt.expected, actual)
@@ -68,6 +76,8 @@ func TestTrim(t *testing.T) {
 }
 
 func TestSplit(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     string
@@ -88,15 +98,19 @@ func TestSplit(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			actual := Split(tt.input, tt.delimiter)
-			if !reflect.DeepEqual(actual, tt.expected) {
-				t.Errorf("Test '%s' failed. Expected %+v, got %+v", tt.name, tt.expected, actual)
+			if diff := cmp.Diff(tt.expected, actual); diff != "" {
+				t.Fatalf("Split() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
 func TestReplace(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		old      string
@@ -122,6 +136,8 @@ func TestReplace(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		toRemove string
@@ -146,6 +162,8 @@ func TestRemove(t *testing.T) {
 }
 
 func TestAppend(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		toAppend string
@@ -169,6 +187,8 @@ func TestAppend(t *testing.T) {
 }
 
 func TestPrepend(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input     string
 		toPrepend string
@@ -192,6 +212,8 @@ func TestPrepend(t *testing.T) {
 }
 
 func TestLength(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected int
@@ -217,6 +239,8 @@ func TestLength(t *testing.T) {
 }
 
 func TestUpper(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -241,6 +265,8 @@ func TestUpper(t *testing.T) {
 }
 
 func TestLower(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -268,6 +294,8 @@ func TestLower(t *testing.T) {
 }
 
 func TestTitleize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -299,6 +327,8 @@ func TestTitleize(t *testing.T) {
 }
 
 func TestCapitalize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    string
@@ -324,6 +354,8 @@ func TestCapitalize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			actual := Capitalize(tt.input)
 			require.Equal(t, tt.expected, actual, fmt.Sprintf("Output for '%s' should match expected value '%s' but got '%s'", tt.input, tt.expected, actual))
 		})
@@ -331,6 +363,8 @@ func TestCapitalize(t *testing.T) {
 }
 
 func TestCamelize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -361,12 +395,16 @@ func TestCamelize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
+
 			actual := Camelize(tt.input)
 			require.Equal(t, tt.expected, actual, fmt.Sprintf("Output for '%s' should match expected value '%s' but got '%s'", tt.input, tt.expected, actual))
 		})
 	}
 }
 func TestDasherize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    string
@@ -385,6 +423,8 @@ func TestDasherize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			actual := Dasherize(tt.input)
 			require.Equal(t, tt.expected, actual, fmt.Sprintf("Output for '%s' should match expected value '%s' but got '%s'", tt.input, tt.expected, actual))
 		})
@@ -392,6 +432,8 @@ func TestDasherize(t *testing.T) {
 }
 
 func TestSlugify(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -403,6 +445,8 @@ func TestSlugify(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
+
 			result := Slugify(tt.input)
 			require.Equal(t, tt.expected, result)
 		})
@@ -410,6 +454,8 @@ func TestSlugify(t *testing.T) {
 }
 
 func TestPluralize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		count    int
 		singular string
@@ -448,6 +494,8 @@ func TestPluralize(t *testing.T) {
 }
 
 func TestOrdinalize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		number   int
 		expected string
@@ -480,6 +528,8 @@ func TestOrdinalize(t *testing.T) {
 }
 
 func TestTruncate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		input      string
@@ -506,6 +556,8 @@ func TestTruncate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gotOutput := Truncate(tt.input, tt.maxLength, tt.ellipsis...)
 			if gotOutput != tt.wantOutput {
 				t.Errorf("Truncate(%q, %d, %v) = %q, want %q", tt.input, tt.maxLength, tt.ellipsis, gotOutput, tt.wantOutput)
@@ -515,6 +567,8 @@ func TestTruncate(t *testing.T) {
 }
 
 func TestTruncateWords(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		input      string
@@ -542,6 +596,8 @@ func TestTruncateWords(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gotOutput := TruncateWords(tt.input, tt.maxWords, tt.ellipsis...)
 			if gotOutput != tt.wantOutput {
 				t.Errorf("TruncateWords(%q, %d, %v) = %q, want %q", tt.input, tt.maxWords, tt.ellipsis, gotOutput, tt.wantOutput)
@@ -551,6 +607,8 @@ func TestTruncateWords(t *testing.T) {
 }
 
 func TestEscape(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    string
@@ -564,6 +622,8 @@ func TestEscape(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := Escape(tt.input)
 			require.Equal(t, tt.expected, result)
 		})
@@ -571,6 +631,8 @@ func TestEscape(t *testing.T) {
 }
 
 func TestEscapeOnce(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    string
@@ -586,6 +648,8 @@ func TestEscapeOnce(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := EscapeOnce(tt.input)
 			require.Equal(t, tt.expected, result)
 		})
@@ -593,6 +657,8 @@ func TestEscapeOnce(t *testing.T) {
 }
 
 func TestStripHTML(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    string
@@ -611,6 +677,8 @@ func TestStripHTML(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := StripHTML(tt.input)
 			require.Equal(t, tt.expected, result)
 		})
@@ -618,6 +686,8 @@ func TestStripHTML(t *testing.T) {
 }
 
 func TestStripNewlines(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -637,6 +707,8 @@ func TestStripNewlines(t *testing.T) {
 }
 
 func TestTrimLeft(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -654,6 +726,8 @@ func TestTrimLeft(t *testing.T) {
 }
 
 func TestTrimRight(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -671,6 +745,8 @@ func TestTrimRight(t *testing.T) {
 }
 
 func TestReplaceFirst(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input       string
 		old         string
@@ -690,6 +766,8 @@ func TestReplaceFirst(t *testing.T) {
 }
 
 func TestReplaceLast(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input       string
 		old         string
@@ -709,6 +787,8 @@ func TestReplaceLast(t *testing.T) {
 }
 
 func TestRemoveFirst(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		toRemove string
@@ -726,6 +806,8 @@ func TestRemoveFirst(t *testing.T) {
 }
 
 func TestRemoveLast(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		toRemove string
@@ -743,6 +825,8 @@ func TestRemoveLast(t *testing.T) {
 }
 
 func TestSlice(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    any
@@ -767,18 +851,24 @@ func TestSlice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := Slice(tt.input, tt.offset, tt.length...)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.expected, result)
+				if diff := cmp.Diff(tt.expected, result); diff != "" {
+					t.Fatalf("Slice() mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
 }
 
 func TestURLEncode(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -796,6 +886,8 @@ func TestURLEncode(t *testing.T) {
 }
 
 func TestURLDecode(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -819,6 +911,8 @@ func TestURLDecode(t *testing.T) {
 }
 
 func TestBase64Encode(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
@@ -834,6 +928,8 @@ func TestBase64Encode(t *testing.T) {
 }
 
 func TestBase64Decode(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string

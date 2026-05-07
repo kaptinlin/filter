@@ -1,13 +1,17 @@
 package filter
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUnique(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -47,18 +51,24 @@ func TestUnique(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Unique(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.ElementsMatch(t, tt.want, got, "The returned slice should contain unique elements only")
+				if diff := cmp.Diff(tt.want, got); diff != "" {
+					t.Fatalf("Unique() mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
 }
 
 func TestUnique_NonComparableValues(t *testing.T) {
+	t.Parallel()
+
 	input := []any{
 		map[string]any{"name": "shirt", "meta": []any{"blue", 42}},
 		map[string]any{"name": "shirt", "meta": []any{"blue", 42}},
@@ -67,13 +77,18 @@ func TestUnique_NonComparableValues(t *testing.T) {
 
 	got, err := Unique(input)
 	require.NoError(t, err)
-	require.Equal(t, []any{
+	want := []any{
 		map[string]any{"name": "shirt", "meta": []any{"blue", 42}},
 		map[string]any{"name": "pants", "meta": []any{"black", 40}},
-	}, got)
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("Unique() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestJoin(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -119,6 +134,8 @@ func TestJoin(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Join(tt.input, tt.separator)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -131,6 +148,8 @@ func TestJoin(t *testing.T) {
 }
 
 func TestIndex(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -184,6 +203,8 @@ func TestIndex(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Index(tt.input, tt.index)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -196,6 +217,8 @@ func TestIndex(t *testing.T) {
 }
 
 func TestLast(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -236,6 +259,8 @@ func TestLast(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Last(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -248,6 +273,8 @@ func TestLast(t *testing.T) {
 }
 
 func TestRandom(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -277,19 +304,22 @@ func TestRandom(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Random(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				// Verify the returned element is within the input slice.
-				require.True(t, elementInSlice(got, tt.input), "The returned element should belong to the input slice")
+				require.Contains(t, tt.input, got, "The returned element should belong to the input slice")
 			}
 		})
 	}
 }
 
 func TestReverse(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -330,18 +360,24 @@ func TestReverse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Reverse(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.want, got, "The reversed slice should match the expected output")
+				if diff := cmp.Diff(tt.want, got); diff != "" {
+					t.Fatalf("Reverse() mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
 }
 
 func TestShuffle(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -376,19 +412,26 @@ func TestShuffle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			original := deepcopy(tt.input)
+			t.Parallel()
+
 			shuffled, err := Shuffle(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.ElementsMatch(t, original, shuffled, "Shuffled slice should contain the same elements as the original")
+				if diff := cmp.Diff(tt.input, shuffled, cmpopts.SortSlices(func(a, b any) bool {
+					return fmt.Sprint(a) < fmt.Sprint(b)
+				})); diff != "" {
+					t.Fatalf("Shuffle() mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
 }
 
 func TestSize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -453,6 +496,8 @@ func TestSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Size(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -465,6 +510,8 @@ func TestSize(t *testing.T) {
 }
 
 func TestMax(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -508,6 +555,8 @@ func TestMax(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Max(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -520,6 +569,8 @@ func TestMax(t *testing.T) {
 }
 
 func TestMin(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -563,6 +614,8 @@ func TestMin(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Min(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -575,6 +628,8 @@ func TestMin(t *testing.T) {
 }
 
 func TestSum(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -627,6 +682,8 @@ func TestSum(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Sum(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -645,6 +702,8 @@ func TestSum(t *testing.T) {
 }
 
 func TestAverage(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -703,6 +762,8 @@ func TestAverage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Average(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -715,6 +776,8 @@ func TestAverage(t *testing.T) {
 }
 
 func TestMap(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -867,18 +930,24 @@ func TestMap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Map(tt.input, tt.key)
 			if tt.expectErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.want, got, "The extracted slice should match the expected output")
+				if diff := cmp.Diff(tt.want, got); diff != "" {
+					t.Fatalf("Map() mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
 }
 
 func TestSort(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		input   any
@@ -942,18 +1011,24 @@ func TestSort(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Sort(tt.input, tt.key...)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.want, got)
+				if diff := cmp.Diff(tt.want, got); diff != "" {
+					t.Fatalf("result mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
 }
 
 func TestSortNatural(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name  string
 		input any
@@ -987,14 +1062,20 @@ func TestSortNatural(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := SortNatural(tt.input, tt.key...)
 			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Fatalf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
 func TestCompact(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name  string
 		input any
@@ -1037,14 +1118,20 @@ func TestCompact(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Compact(tt.input, tt.key...)
 			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Fatalf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
 func TestConcat(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		input   any
@@ -1091,18 +1178,24 @@ func TestConcat(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Concat(tt.input, tt.other)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.want, got)
+				if diff := cmp.Diff(tt.want, got); diff != "" {
+					t.Fatalf("result mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
 }
 
 func TestWhere(t *testing.T) {
+	t.Parallel()
+
 	products := []any{
 		map[string]any{"name": "Shoes", "available": true, "price": 50.0},
 		map[string]any{"name": "Shirt", "available": false, "price": 30.0},
@@ -1160,14 +1253,20 @@ func TestWhere(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Where(tt.input, tt.key, tt.value...)
 			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Fatalf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
 func TestWhereWithNonComparableValue(t *testing.T) {
+	t.Parallel()
+
 	products := []any{
 		map[string]any{"name": "Shoes", "tags": []any{"sale", "new"}},
 		map[string]any{"name": "Shirt", "tags": []any{"clearance"}},
@@ -1175,12 +1274,17 @@ func TestWhereWithNonComparableValue(t *testing.T) {
 
 	got, err := Where(products, "tags", []any{"sale", "new"})
 	require.NoError(t, err)
-	require.Equal(t, []any{
+	want := []any{
 		map[string]any{"name": "Shoes", "tags": []any{"sale", "new"}},
-	}, got)
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("Where() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestReject(t *testing.T) {
+	t.Parallel()
+
 	products := []any{
 		map[string]any{"name": "Shoes", "available": true},
 		map[string]any{"name": "Shirt", "available": false},
@@ -1215,14 +1319,20 @@ func TestReject(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Reject(tt.input, tt.key, tt.value...)
 			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Fatalf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
 func TestFind(t *testing.T) {
+	t.Parallel()
+
 	products := []any{
 		map[string]any{"handle": "shoes", "price": 50.0},
 		map[string]any{"handle": "shirt", "price": 30.0},
@@ -1260,14 +1370,20 @@ func TestFind(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Find(tt.input, tt.key, tt.value)
 			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Fatalf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
 func TestFindIndex(t *testing.T) {
+	t.Parallel()
+
 	products := []any{
 		map[string]any{"handle": "shoes"},
 		map[string]any{"handle": "shirt"},
@@ -1305,6 +1421,8 @@ func TestFindIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := FindIndex(tt.input, tt.key, tt.value)
 			require.NoError(t, err)
 			require.Equal(t, tt.want, got)
@@ -1313,6 +1431,8 @@ func TestFindIndex(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
+	t.Parallel()
+
 	products := []any{
 		map[string]any{"name": "Shoes", "available": true},
 		map[string]any{"name": "Shirt", "available": false},
@@ -1360,35 +1480,13 @@ func TestHas(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Has(tt.input, tt.key, tt.value...)
 			require.NoError(t, err)
 			require.Equal(t, tt.want, got)
 		})
 	}
-}
-
-// deepcopy creates a deep copy of the input slice to ensure the original slice is not modified.
-func deepcopy(input any) any {
-	inVal := reflect.ValueOf(input)
-	if inVal.Kind() != reflect.Slice {
-		return input
-	}
-
-	copyVal := reflect.MakeSlice(inVal.Type(), inVal.Len(), inVal.Cap())
-	reflect.Copy(copyVal, inVal)
-	return copyVal.Interface()
-}
-
-// elementInSlice checks if an element is present in the slice.
-// This is a helper function for the Random test to verify the element belongs to the input slice.
-func elementInSlice(element any, input any) bool {
-	slice, _ := toSlice(input)
-	for _, elem := range slice {
-		if reflect.DeepEqual(elem, element) {
-			return true
-		}
-	}
-	return false
 }
 
 // Benchmark tests for array operations

@@ -9,6 +9,8 @@ import (
 )
 
 func TestToCarbon(t *testing.T) {
+	t.Parallel()
+
 	// Define test cases
 	testCases := []struct {
 		name    string
@@ -45,6 +47,8 @@ func TestToCarbon(t *testing.T) {
 	// Run test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := toCarbon(tc.input)
 			if tc.wantErr {
 				assert.Error(t, err)

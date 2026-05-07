@@ -8,6 +8,8 @@ import (
 )
 
 func TestAbs(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -60,6 +62,8 @@ func TestAbs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Abs(tt.input)
 			if tt.expectError {
 				require.Error(t, err)
@@ -72,6 +76,8 @@ func TestAbs(t *testing.T) {
 }
 
 func TestAtLeast(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -153,6 +159,8 @@ func TestAtLeast(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := AtLeast(tt.input, tt.min)
 			if tt.expectError {
 				require.Error(t, err)
@@ -165,6 +173,8 @@ func TestAtLeast(t *testing.T) {
 }
 
 func TestAtMost(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -246,6 +256,8 @@ func TestAtMost(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := AtMost(tt.input, tt.max)
 			if tt.expectError {
 				require.Error(t, err)
@@ -258,6 +270,8 @@ func TestAtMost(t *testing.T) {
 }
 
 func TestRound(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -353,6 +367,8 @@ func TestRound(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Round(tt.input, tt.precision)
 			if tt.expectError {
 				require.Error(t, err)
@@ -365,6 +381,8 @@ func TestRound(t *testing.T) {
 }
 
 func TestFloor(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -423,6 +441,8 @@ func TestFloor(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Floor(tt.input)
 			if tt.expectError {
 				require.Error(t, err)
@@ -435,6 +455,8 @@ func TestFloor(t *testing.T) {
 }
 
 func TestCeil(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -493,6 +515,8 @@ func TestCeil(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Ceil(tt.input)
 			if tt.expectError {
 				require.Error(t, err)
@@ -505,6 +529,8 @@ func TestCeil(t *testing.T) {
 }
 
 func TestPlus(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -586,6 +612,8 @@ func TestPlus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Plus(tt.input, tt.addend)
 			if tt.expectError {
 				require.Error(t, err)
@@ -598,6 +626,8 @@ func TestPlus(t *testing.T) {
 }
 
 func TestMinus(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -679,6 +709,8 @@ func TestMinus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Minus(tt.input, tt.subtrahend)
 			if tt.expectError {
 				require.Error(t, err)
@@ -691,6 +723,8 @@ func TestMinus(t *testing.T) {
 }
 
 func TestTimes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -772,6 +806,8 @@ func TestTimes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Times(tt.input, tt.multiplier)
 			if tt.expectError {
 				require.Error(t, err)
@@ -784,6 +820,8 @@ func TestTimes(t *testing.T) {
 }
 
 func TestDivide(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -867,6 +905,8 @@ func TestDivide(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Divide(tt.input, tt.divisor)
 			if tt.expectError {
 				require.Error(t, err)
@@ -882,6 +922,8 @@ func TestDivide(t *testing.T) {
 }
 
 func TestModulo(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -965,6 +1007,8 @@ func TestModulo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Modulo(tt.input, tt.modulus)
 			if tt.expectError {
 				require.Error(t, err)

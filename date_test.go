@@ -9,6 +9,8 @@ import (
 )
 
 func TestDate(t *testing.T) {
+	t.Parallel()
+
 	// Set up some reference times for testing
 	now := time.Now()
 	carbonNow := carbon.Now()
@@ -65,6 +67,8 @@ func TestDate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Date(tt.input, tt.format)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -77,6 +81,8 @@ func TestDate(t *testing.T) {
 }
 
 func TestDay(t *testing.T) {
+	t.Parallel()
+
 	// Define test cases
 	tests := []struct {
 		name      string
@@ -116,6 +122,8 @@ func TestDay(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gotDay, err := Day(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -128,6 +136,8 @@ func TestDay(t *testing.T) {
 }
 
 func TestMonth(t *testing.T) {
+	t.Parallel()
+
 	// Define test cases
 	tests := []struct {
 		name      string
@@ -173,6 +183,8 @@ func TestMonth(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gotMonth, err := Month(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -185,6 +197,8 @@ func TestMonth(t *testing.T) {
 }
 
 func TestMonthFull(t *testing.T) {
+	t.Parallel()
+
 	// Define test cases
 	tests := []struct {
 		name          string
@@ -230,6 +244,8 @@ func TestMonthFull(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gotMonth, err := MonthFull(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -242,6 +258,8 @@ func TestMonthFull(t *testing.T) {
 }
 
 func TestYear(t *testing.T) {
+	t.Parallel()
+
 	// Define test cases
 	tests := []struct {
 		name         string
@@ -287,6 +305,8 @@ func TestYear(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gotYear, err := Year(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -299,6 +319,8 @@ func TestYear(t *testing.T) {
 }
 
 func TestWeek(t *testing.T) {
+	t.Parallel()
+
 	// Define test cases
 	tests := []struct {
 		name         string
@@ -344,6 +366,8 @@ func TestWeek(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gotWeek, err := Week(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -356,6 +380,8 @@ func TestWeek(t *testing.T) {
 }
 
 func TestWeekday(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name            string
 		input           any
@@ -400,6 +426,8 @@ func TestWeekday(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gotWeekday, err := Weekday(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -412,10 +440,10 @@ func TestWeekday(t *testing.T) {
 }
 
 func TestTimeAgo(t *testing.T) {
-	// Set a fixed test time
+	// carbon.SetTestNow mutates global package state.
 	fixedNow := carbon.Parse("2023-08-05 13:14:15")
 	carbon.SetTestNow(fixedNow)
-	defer carbon.ClearTestNow() // Clean up after test
+	defer carbon.ClearTestNow()
 
 	tests := []struct {
 		name           string

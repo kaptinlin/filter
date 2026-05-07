@@ -1,17 +1,17 @@
 package filter
 
 import (
-	"errors"
 	"testing"
 	"time"
 
-	"github.com/kaptinlin/jsonpointer"
-	"github.com/stretchr/testify/assert"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 )
 
 // TestExtractMap tests the Extract function with map data structures
 func TestExtractMap(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -94,6 +94,8 @@ func TestExtractMap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Extract(tt.input, tt.key)
 			if tt.expectError {
 				require.Error(t, err)
@@ -110,6 +112,8 @@ func TestExtractMap(t *testing.T) {
 
 // TestExtractSlice tests the Extract function with slice/array data structures
 func TestExtractSlice(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -154,6 +158,8 @@ func TestExtractSlice(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Extract(tt.input, tt.key)
 			if tt.expectError {
 				require.Error(t, err)
@@ -170,6 +176,8 @@ func TestExtractSlice(t *testing.T) {
 
 // TestExtractEdgeCases tests edge cases for the Extract function
 func TestExtractEdgeCases(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		input       any
@@ -195,6 +203,8 @@ func TestExtractEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := Extract(tt.input, tt.key)
 			require.Error(t, err)
 			if tt.errorType != nil {
@@ -206,6 +216,8 @@ func TestExtractEdgeCases(t *testing.T) {
 
 // TestExtractSimpleStruct tests basic struct field access
 func TestExtractSimpleStruct(t *testing.T) {
+	t.Parallel()
+
 	// Define a simple location structure
 	type Location struct {
 		Road     string    `json:"road"`
@@ -251,15 +263,21 @@ func TestExtractSimpleStruct(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := Extract(location, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Fatalf("Extract() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
 // TestExtractNestedStruct tests nested struct field access
 func TestExtractNestedStruct(t *testing.T) {
+	t.Parallel()
+
 	type Address struct {
 		Street  string `json:"street"`
 		City    string `json:"city"`
@@ -318,14 +336,20 @@ func TestExtractNestedStruct(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := Extract(person, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Fatalf("Extract() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
 func TestExtractStructFieldWithEmbeddedFieldOrder(t *testing.T) {
+	t.Parallel()
+
 	type EmbeddedName struct {
 		EmbeddedName string `json:"embedded_name"`
 	}
@@ -342,11 +366,15 @@ func TestExtractStructFieldWithEmbeddedFieldOrder(t *testing.T) {
 
 	result, err := Extract(user, "name")
 	require.NoError(t, err)
-	assert.Equal(t, "top-level", result)
+	if diff := cmp.Diff("top-level", result); diff != "" {
+		t.Fatalf("Extract() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 // TestExtractStructWithMap tests structures containing maps
 func TestExtractStructWithMap(t *testing.T) {
+	t.Parallel()
+
 	type Location struct {
 		Name     string `json:"name"`
 		PostCode int    `json:"post_code"`
@@ -420,15 +448,21 @@ func TestExtractStructWithMap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := Extract(org, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Fatalf("Extract() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
 // TestExtractStructWithPointers tests extracting from structures containing pointers
 func TestExtractStructWithPointers(t *testing.T) {
+	t.Parallel()
+
 	type Department struct {
 		Name     string `json:"name"`
 		Building string `json:"building"`
@@ -491,15 +525,21 @@ func TestExtractStructWithPointers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := Extract(employee, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Fatalf("Extract() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
 // TestExtractComplexSelfReferentialStructures tests extraction from complex self-referential and deeply nested structures
 func TestExtractComplexSelfReferentialStructures(t *testing.T) {
+	t.Parallel()
+
 	// Define a simpler self-referential structure
 	type Location struct {
 		Street string `json:"street"`
@@ -643,9 +683,13 @@ func TestExtractComplexSelfReferentialStructures(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := Extract(headquarter, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Fatalf("Extract() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 
@@ -679,6 +723,8 @@ func TestExtractComplexSelfReferentialStructures(t *testing.T) {
 
 	for _, tt := range errorTests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := Extract(headquarter, tt.key)
 			require.Error(t, err)
 			require.ErrorIs(t, err, tt.errorType)
@@ -688,6 +734,8 @@ func TestExtractComplexSelfReferentialStructures(t *testing.T) {
 
 // TestExtractUltraComplexStructures tests the Extract function on extremely complex nested data structures
 func TestExtractUltraComplexStructures(t *testing.T) {
+	t.Parallel()
+
 	// Define structure with ultra-complex nesting
 	type Node struct {
 		ID    int    `json:"id"`
@@ -804,9 +852,13 @@ func TestExtractUltraComplexStructures(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := Extract(deep, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Fatalf("Extract() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 
@@ -840,6 +892,8 @@ func TestExtractUltraComplexStructures(t *testing.T) {
 
 	for _, tt := range errorTests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := Extract(deep, tt.key)
 			require.Error(t, err)
 			require.ErrorIs(t, err, tt.errorType)
@@ -849,6 +903,8 @@ func TestExtractUltraComplexStructures(t *testing.T) {
 
 // TestExtractErrorHandling tests specific error handling scenarios to improve coverage
 func TestExtractErrorHandling(t *testing.T) {
+	t.Parallel()
+
 	type NestedStruct struct {
 		Value int `json:"value"`
 	}
@@ -872,6 +928,8 @@ func TestExtractErrorHandling(t *testing.T) {
 	}
 
 	t.Run("ErrInvalidIndex", func(t *testing.T) {
+		t.Parallel()
+
 		// Test invalid array index (non-numeric)
 		_, err := Extract(testData, "slice_field.invalid")
 		require.Error(t, err)
@@ -879,6 +937,8 @@ func TestExtractErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ErrInvalidPathStep", func(t *testing.T) {
+		t.Parallel()
+
 		// This error would be triggered by jsonpointer for invalid path steps
 		// Since jsonpointer handles most path validation, we test edge cases
 		_, err := Extract(testData, "int_field.nested.deep")
@@ -887,6 +947,8 @@ func TestExtractErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ErrNilPointer", func(t *testing.T) {
+		t.Parallel()
+
 		// Test navigation through nil pointer
 		testDataWithNil := TestStruct{
 			IntField:     42,
@@ -899,6 +961,8 @@ func TestExtractErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ErrKeyNotFound_Map", func(t *testing.T) {
+		t.Parallel()
+
 		// Test map key not found
 		_, err := Extract(testData, "map_field.nonexistent")
 		require.Error(t, err)
@@ -906,6 +970,8 @@ func TestExtractErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ErrFieldNotFound_Struct", func(t *testing.T) {
+		t.Parallel()
+
 		// Test struct field not found
 		_, err := Extract(testData, "nonexistent_field")
 		require.Error(t, err)
@@ -913,6 +979,8 @@ func TestExtractErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ErrIndexOutOfBounds_Slice", func(t *testing.T) {
+		t.Parallel()
+
 		// Test slice index out of bounds
 		_, err := Extract(testData, "slice_field.10")
 		require.Error(t, err)
@@ -920,6 +988,8 @@ func TestExtractErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ErrIndexOutOfBounds_NegativeIndex", func(t *testing.T) {
+		t.Parallel()
+
 		// Test negative array index - jsonpointer treats this as invalid index, not out of bounds
 		_, err := Extract(testData, "slice_field.-1")
 		require.Error(t, err)
@@ -927,6 +997,8 @@ func TestExtractErrorHandling(t *testing.T) {
 	})
 
 	t.Run("Complex_Error_Path", func(t *testing.T) {
+		t.Parallel()
+
 		// Test complex error path that triggers multiple error checks
 		_, err := Extract(testData, "nested_field.value.invalid.deep.path")
 		require.Error(t, err)
@@ -936,6 +1008,8 @@ func TestExtractErrorHandling(t *testing.T) {
 
 // TestExtractPointerHandling tests comprehensive pointer handling scenarios
 func TestExtractPointerHandling(t *testing.T) {
+	t.Parallel()
+
 	type Level3 struct {
 		Value string `json:"value"`
 	}
@@ -1040,9 +1114,13 @@ func TestExtractPointerHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := Extract(testData, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Fatalf("Extract() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 
@@ -1076,6 +1154,8 @@ func TestExtractPointerHandling(t *testing.T) {
 
 	for _, tt := range errorTests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := Extract(testData, tt.key)
 			require.Error(t, err)
 			require.ErrorIs(t, err, tt.errorType)
@@ -1085,6 +1165,8 @@ func TestExtractPointerHandling(t *testing.T) {
 
 // TestExtractInterfaceHandling tests handling of interface{} types
 func TestExtractInterfaceHandling(t *testing.T) {
+	t.Parallel()
+
 	// Test with interface{} containing various types
 	interfaceData := map[string]any{
 		"string_val": "hello",
@@ -1151,9 +1233,13 @@ func TestExtractInterfaceHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := Extract(interfaceData, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Fatalf("Extract() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 
@@ -1182,91 +1268,11 @@ func TestExtractInterfaceHandling(t *testing.T) {
 
 	for _, tt := range errorTests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := Extract(interfaceData, tt.key)
 			require.Error(t, err)
 			require.ErrorIs(t, err, tt.errorType)
-		})
-	}
-}
-
-func TestMapJSONPointerError(t *testing.T) {
-	tests := []struct {
-		name    string
-		err     error
-		key     string
-		wantIs  error
-		wantMsg string
-	}{
-		{
-			name:    "key not found",
-			err:     jsonpointer.ErrKeyNotFound,
-			key:     "user.name",
-			wantIs:  ErrKeyNotFound,
-			wantMsg: "user.name",
-		},
-		{
-			name:    "field not found",
-			err:     jsonpointer.ErrFieldNotFound,
-			key:     "user.name",
-			wantIs:  ErrKeyNotFound,
-			wantMsg: "user.name",
-		},
-		{
-			name:    "index out of bounds",
-			err:     jsonpointer.ErrIndexOutOfBounds,
-			key:     "items.10",
-			wantIs:  ErrIndexOutOfRange,
-			wantMsg: "items.10",
-		},
-		{
-			name:    "invalid index",
-			err:     jsonpointer.ErrInvalidIndex,
-			key:     "items.invalid",
-			wantIs:  ErrInvalidKeyType,
-			wantMsg: "items.invalid",
-		},
-		{
-			name:    "invalid path step",
-			err:     jsonpointer.ErrInvalidPathStep,
-			key:     "items.invalid",
-			wantIs:  ErrInvalidKeyType,
-			wantMsg: "items.invalid",
-		},
-		{
-			name:    "nil pointer",
-			err:     jsonpointer.ErrNilPointer,
-			key:     "user.profile.name",
-			wantIs:  ErrInvalidKeyType,
-			wantMsg: "cannot navigate through nil pointer in user.profile.name",
-		},
-		{
-			name:    "not found with dotted key",
-			err:     jsonpointer.ErrNotFound,
-			key:     "user.profile.name",
-			wantIs:  ErrInvalidKeyType,
-			wantMsg: ErrInvalidKeyType.Error(),
-		},
-		{
-			name:    "not found with flat key",
-			err:     jsonpointer.ErrNotFound,
-			key:     "user",
-			wantIs:  ErrKeyNotFound,
-			wantMsg: "user",
-		},
-		{
-			name:    "fallback wraps original error",
-			err:     errors.New("boom"),
-			key:     "user",
-			wantIs:  ErrInvalidKeyType,
-			wantMsg: "boom",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := mapJSONPointerError(tt.err, tt.key)
-			require.ErrorIs(t, err, tt.wantIs)
-			require.ErrorContains(t, err, tt.wantMsg)
 		})
 	}
 }

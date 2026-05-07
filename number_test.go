@@ -8,6 +8,8 @@ import (
 )
 
 func TestNumber(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -61,6 +63,8 @@ func TestNumber(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Number(tt.input, tt.format)
 			if tt.expectErr {
 				require.Error(t, err)
@@ -73,6 +77,8 @@ func TestNumber(t *testing.T) {
 }
 
 func TestBytes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		input     any
@@ -119,6 +125,8 @@ func TestBytes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Bytes(tt.input)
 			if tt.expectErr {
 				require.Error(t, err)
