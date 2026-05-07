@@ -77,3 +77,4 @@ reports/*
 TODO*.md
 .vscode/
 .ralphy/*.json
+.plans
