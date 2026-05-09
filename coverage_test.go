@@ -20,8 +20,11 @@ func TestUniqueDeduplicatesNonComparableValues(t *testing.T) {
 		Name string
 	}
 
+	var nilInt *int
+
 	input := []any{
 		true, true,
+		false, false,
 		float64(1.5), float64(1.5),
 		int(3), int(3),
 		"x", "x",
@@ -31,8 +34,9 @@ func TestUniqueDeduplicatesNonComparableValues(t *testing.T) {
 		uint32(9), uint32(9),
 		float32(2.5), float32(2.5),
 		[2]int{1, 2}, [2]int{1, 2},
-		map[int]string{1: "a"}, map[int]string{1: "a"},
+		map[int]string{2: "b", 1: "a"}, map[int]string{1: "a", 2: "b"},
 		&a, &b,
+		nilInt, nilInt,
 		sample{ID: 1, Name: "alpha"}, sample{ID: 1, Name: "alpha"},
 		nil, nil,
 	}
@@ -42,6 +46,7 @@ func TestUniqueDeduplicatesNonComparableValues(t *testing.T) {
 
 	want := []any{
 		true,
+		false,
 		float64(1.5),
 		int(3),
 		"x",
@@ -51,8 +56,9 @@ func TestUniqueDeduplicatesNonComparableValues(t *testing.T) {
 		uint32(9),
 		float32(2.5),
 		[2]int{1, 2},
-		map[int]string{1: "a"},
+		map[int]string{1: "a", 2: "b"},
 		&a,
+		nilInt,
 		sample{ID: 1, Name: "alpha"},
 		nil,
 	}
@@ -153,6 +159,13 @@ func TestCollectionFunctionsAdditionalBehaviors(t *testing.T) {
 		t.Fatalf("Find() mismatch (-want +got):\n%s", diff)
 	}
 
+	gotNil, err := Find(items, "flag", nil)
+	require.NoError(t, err)
+	wantNil := map[string]any{"flag": nil, "count": "10"}
+	if diff := cmp.Diff(wantNil, gotNil); diff != "" {
+		t.Fatalf("Find() mismatch (-want +got):\n%s", diff)
+	}
+
 	gotIndex, err := FindIndex([]any{}, "count", 1)
 	require.NoError(t, err)
 	require.Equal(t, -1, gotIndex)
@@ -160,6 +173,22 @@ func TestCollectionFunctionsAdditionalBehaviors(t *testing.T) {
 	gotHas, err := Has(items, "count", 10.0)
 	require.NoError(t, err)
 	require.True(t, gotHas)
+}
+
+func TestFindSkipsItemsMissingKey(t *testing.T) {
+	t.Parallel()
+
+	items := []any{
+		map[string]any{"name": "missing"},
+		map[string]any{"name": "matched", "sku": "target"},
+	}
+
+	got, err := Find(items, "sku", "target")
+	require.NoError(t, err)
+	want := map[string]any{"name": "matched", "sku": "target"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("Find() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestWhereTreatsNonNilNonFalseValuesAsTruthy(t *testing.T) {
@@ -315,6 +344,14 @@ func TestPascalize(t *testing.T) {
 			require.Equal(t, tc.want, Pascalize(tc.input))
 		})
 	}
+}
+
+func TestCaseConversionPreservesAcronymBoundaries(t *testing.T) {
+	t.Parallel()
+
+	require.Equal(t, "ID", Camelize("ID"))
+	require.Equal(t, "IDNumber", Pascalize("IDNumber"))
+	require.Equal(t, "id-number", Dasherize("IDNumber"))
 }
 
 func TestDateAcceptsCarbonPointer(t *testing.T) {
