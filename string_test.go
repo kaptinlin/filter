@@ -841,6 +841,8 @@ func TestSlice(t *testing.T) {
 		{"String negative offset", "hello", -3, []int{2}, "ll", false},
 		{"String out of bounds", "hello", 10, nil, "", false},
 		{"String negative out of bounds", "hello", -10, nil, "", false},
+		{"String zero length", "hello", 1, []int{0}, "", false},
+		{"String negative length", "hello", 1, []int{-1}, "", false},
 		{"String empty", "", 0, nil, "", false},
 		{"String UTF-8", "こんにちは", 1, []int{2}, "んに", false},
 		{"Slice single element", []any{1, 2, 3, 4}, 1, nil, []any{2}, false},
@@ -848,6 +850,8 @@ func TestSlice(t *testing.T) {
 		{"Slice negative offset", []any{1, 2, 3, 4}, -2, []int{2}, []any{3, 4}, false},
 		{"Typed slice with offset", []string{"a", "b", "c", "d"}, 1, []int{2}, []any{"b", "c"}, false},
 		{"Slice out of bounds", []any{1, 2, 3}, 10, nil, []any{}, false},
+		{"Slice zero length", []any{1, 2, 3}, 1, []int{0}, []any{}, false},
+		{"Slice negative length", []any{1, 2, 3}, 1, []int{-1}, []any{}, false},
 		{"Invalid type", 123, 0, nil, nil, true},
 	}
 	for _, tt := range tests {

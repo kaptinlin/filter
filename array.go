@@ -63,19 +63,19 @@ func uniqueHash(slice []any) []any {
 		hv := h.Sum64()
 
 		duplicate := false
-		if indices := hashes[hv]; len(indices) > 0 {
-			for _, j := range indices {
-				if deepEqualValue(item, result[j]) {
-					duplicate = true
-					break
-				}
+		for _, j := range hashes[hv] {
+			if deepEqualValue(item, result[j]) {
+				duplicate = true
+				break
 			}
 		}
 
-		if !duplicate {
-			hashes[hv] = append(hashes[hv], len(result))
-			result = append(result, item)
+		if duplicate {
+			continue
 		}
+
+		hashes[hv] = append(hashes[hv], len(result))
+		result = append(result, item)
 	}
 	return result
 }
@@ -573,25 +573,22 @@ func Has(input any, key string, value ...any) (bool, error) {
 	}), nil
 }
 
-// extractOrSelf extracts values at key, or returns the values unchanged when key is empty.
 func extractOrSelf(a, b any, key ...string) (any, any) {
-	if len(key) > 0 && key[0] != "" {
-		va, errA := Extract(a, key[0])
-		vb, errB := Extract(b, key[0])
-		if errA != nil {
-			va = nil
-		}
-		if errB != nil {
-			vb = nil
-		}
-		return va, vb
+	if len(key) == 0 || key[0] == "" {
+		return a, b
 	}
-	return a, b
+
+	va, errA := Extract(a, key[0])
+	vb, errB := Extract(b, key[0])
+	if errA != nil {
+		va = nil
+	}
+	if errB != nil {
+		vb = nil
+	}
+	return va, vb
 }
 
-// matchesCriteria checks whether item's property at key matches the given criteria.
-// If value is provided, checks property == value; otherwise checks property is truthy.
-// Returns false if the key cannot be extracted.
 func matchesCriteria(item any, key string, value ...any) bool {
 	v, err := Extract(item, key)
 	if err != nil {
@@ -603,27 +600,19 @@ func matchesCriteria(item any, key string, value ...any) bool {
 	return isTruthy(v)
 }
 
-// compareValues compares two values for sorting.
-// Numbers are compared numerically, everything else as strings.
 func compareValues(a, b any) int {
 	return compareValuesBy(a, b, func(s string) string { return s })
 }
 
-// compareValuesNatural compares two values case-insensitively for natural sorting.
 func compareValuesNatural(a, b any) int {
 	return compareValuesBy(a, b, strings.ToLower)
 }
 
 func compareValuesBy(a, b any, normalize func(string) string) int {
-	if a == nil && b == nil {
-		return 0
+	if result, ok := compareNilValues(a, b); ok {
+		return result
 	}
-	if a == nil {
-		return -1
-	}
-	if b == nil {
-		return 1
-	}
+
 	fa, errA := toFloat64(a)
 	fb, errB := toFloat64(b)
 	if errA == nil && errB == nil {
@@ -632,13 +621,22 @@ func compareValuesBy(a, b any, normalize func(string) string) int {
 	return cmp.Compare(normalize(fmt.Sprint(a)), normalize(fmt.Sprint(b)))
 }
 
-// valuesEqual checks if two values are equal, handling numeric type differences.
-func valuesEqual(a, b any) bool {
-	if a == nil && b == nil {
-		return true
+func compareNilValues(a, b any) (int, bool) {
+	switch {
+	case a == nil && b == nil:
+		return 0, true
+	case a == nil:
+		return -1, true
+	case b == nil:
+		return 1, true
+	default:
+		return 0, false
 	}
-	if a == nil || b == nil {
-		return false
+}
+
+func valuesEqual(a, b any) bool {
+	if result, ok := compareNilValues(a, b); ok {
+		return result == 0
 	}
 
 	ta := reflect.TypeOf(a)
@@ -655,7 +653,6 @@ func valuesEqual(a, b any) bool {
 	return reflect.DeepEqual(a, b)
 }
 
-// isTruthy returns true if the value is not nil and not false.
 func isTruthy(v any) bool {
 	if v == nil {
 		return false
@@ -666,7 +663,6 @@ func isTruthy(v any) bool {
 	return true
 }
 
-// toFloat64Slice converts input to a slice of float64.
 func toFloat64Slice(input any) ([]float64, error) {
 	slice, err := toSlice(input)
 	if err != nil {
@@ -684,7 +680,6 @@ func toFloat64Slice(input any) ([]float64, error) {
 	return result, nil
 }
 
-// toSlice converts input to a slice of any.
 func toSlice(input any) ([]any, error) {
 	v := reflect.ValueOf(input)
 	kind := v.Kind()

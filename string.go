@@ -389,51 +389,46 @@ func Slice(input any, offset int, length ...int) (any, error) {
 
 func sliceString(s string, offset int, length ...int) string {
 	runes := []rune(s)
-	n := len(runes)
-	if n == 0 {
+	start, end, ok := sliceBounds(len(runes), offset, length...)
+	if !ok {
 		return ""
 	}
-	if offset < 0 {
-		offset = n + offset
-	}
-	if offset < 0 || offset >= n {
-		return ""
-	}
-	size := 1
-	if len(length) > 0 {
-		size = length[0]
-	}
-	if size <= 0 {
-		return ""
-	}
-	end := min(offset+size, n)
-	return string(runes[offset:end])
+	return string(runes[start:end])
 }
 
 func sliceReflect(rv reflect.Value, offset int, length ...int) []any {
-	n := rv.Len()
-	if n == 0 {
+	start, end, ok := sliceBounds(rv.Len(), offset, length...)
+	if !ok {
 		return []any{}
 	}
-	if offset < 0 {
-		offset = n + offset
-	}
-	if offset < 0 || offset >= n {
-		return []any{}
-	}
-	size := 1
-	if len(length) > 0 {
-		size = length[0]
-	}
-	if size <= 0 {
-		return []any{}
-	}
-	end := min(offset+size, n)
-	result := make([]any, end-offset)
-	for i := range end - offset {
-		result[i] = rv.Index(offset + i).Interface()
+
+	result := make([]any, end-start)
+	for i := range end - start {
+		result[i] = rv.Index(start + i).Interface()
 	}
 	return result
+}
+
+func sliceBounds(size, offset int, length ...int) (int, int, bool) {
+	if size == 0 {
+		return 0, 0, false
+	}
+	if offset < 0 {
+		offset += size
+	}
+	if offset < 0 || offset >= size {
+		return 0, 0, false
+	}
+
+	count := 1
+	if len(length) > 0 {
+		count = length[0]
+	}
+	if count <= 0 {
+		return 0, 0, false
+	}
+
+	return offset, min(offset+count, size), true
 }
 
 // URLEncode percent-encodes a string for use in URLs.
