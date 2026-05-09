@@ -315,6 +315,7 @@ func TestTitleize(t *testing.T) {
 		{"*greeting*", "*greeting*"},
 		{"hello *marvelous* world!", "Hello *marvelous* World!"},
 		{"user/profile", "User Profile"},
+		{"admin:settings", "Admin Settings"},
 		{"user_id", "User ID"},
 	}
 

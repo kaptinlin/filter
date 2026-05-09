@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -17,7 +16,7 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
-var defaultSpaceRunes = []rune{'_', ' ', ':', '-', '/'}
+const defaultSpaces = "_ :-/"
 
 // Default returns defaultValue if input is nil, false, or empty string.
 func Default(input, defaultValue any) any {
@@ -83,7 +82,7 @@ func Lower(input string) string {
 
 // Titleize capitalizes the start of each part of the string.
 func Titleize(input string) string {
-	parts := toParts(input, defaultSpaceRunes, true)
+	parts := toParts(input, defaultSpaces, true)
 	result := strings.Builder{}
 	result.Grow(len(input))
 
@@ -118,7 +117,7 @@ func Capitalize(input string) string {
 
 // Camelize converts input to camelCase.
 func Camelize(input string) string {
-	parts := toParts(input, defaultSpaceRunes, true)
+	parts := toParts(input, defaultSpaces, true)
 	builder := strings.Builder{}
 	builder.Grow(len(input))
 
@@ -167,7 +166,7 @@ func Pascalize(input string) string {
 
 // Dasherize converts input to lowercase words joined by dashes.
 func Dasherize(input string) string {
-	parts := toParts(input, defaultSpaceRunes, true)
+	parts := toParts(input, defaultSpaces, true)
 	result := make([]string, 0, len(parts))
 	for _, part := range parts {
 		builder := strings.Builder{}
@@ -465,23 +464,21 @@ func Base64Decode(input string) (string, error) {
 	return string(b), nil
 }
 
-func appendPart(a []string, spaces []rune, ss ...string) []string {
-	for _, s := range ss {
-		s = strings.TrimSpace(s)
-		for _, x := range spaces {
-			s = strings.Trim(s, string(x))
-		}
-		if acronym, ok := baseAcronyms[strings.ToUpper(s)]; ok {
-			s = acronym
-		}
-		if s != "" {
-			a = append(a, s)
-		}
+func appendPart(parts []string, spaces, s string) []string {
+	s = strings.TrimSpace(s)
+	for _, r := range spaces {
+		s = strings.Trim(s, string(r))
 	}
-	return a
+	if acronym, ok := baseAcronyms[strings.ToUpper(s)]; ok {
+		s = acronym
+	}
+	if s != "" {
+		parts = append(parts, s)
+	}
+	return parts
 }
 
-func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
+func toParts(s, spaces string, splitOnUpperCase bool) []string {
 	parts := []string{}
 	s = strings.TrimSpace(s)
 	if len(s) == 0 {
@@ -498,7 +495,7 @@ func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 			continue
 		}
 
-		if slices.Contains(spaces, c) || unicode.IsSpace(c) {
+		if strings.ContainsRune(spaces, c) || unicode.IsSpace(c) {
 			parts = appendPart(parts, spaces, x.String())
 			x.Reset()
 			x.WriteRune(c)
