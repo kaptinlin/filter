@@ -2,39 +2,59 @@
 
 The `filter` package offers a suite of functions to work with dates in Go, making it easier to format, extract, and compute time differences.
 
+String inputs are parsed in `time.UTC`. To format in a different zone, pass a `time.Time` already in that zone.
+
 ## Functions
 
 ### Date
 
 Formats a timestamp into a specified format. If no format is provided, it returns a default datetime string.
 
-#### Format Signs
+#### Format Tokens
 
-| Sign | Description                                           | Example   |
-|------|-------------------------------------------------------|-----------|
-| `Y`  | Four-digit year                                       | 2024      |
-| `y`  | Two-digit year                                        | 23        |
-| `F`  | Full month name                                       | March     |
-| `m`  | Month with leading zero                               | 03        |
-| `M`  | Abbreviated month name                                | Mar       |
-| `n`  | Month without leading zeros                           | 3         |
-| `d`  | Day of the month with leading zero                    | 05        |
-| `j`  | Day of the month without leading zeros                | 5         |
-| `D`  | Abbreviated weekday name                              | Tue       |
-| `l`  | Full weekday name                                     | Tuesday   |
-| `a`  | Lowercase ante meridiem and post meridiem             | am, pm    |
-| `A`  | Uppercase Ante meridiem and Post meridiem             | AM, PM    |
-| `g`  | Hour in 12-hour format without leading zeros          | 3         |
-| `h`  | Hour in 12-hour format with leading zeros             | 03        |
-| `G`  | Hour in 24-hour format without leading zeros          | 15        |
-| `H`  | Hour in 24-hour format with leading zeros             | 15        |
-| `i`  | Minute with leading zero                              | 04        |
-| `s`  | Second with leading zero                              | 05        |
-| `O`  | GMT offset without colon                              | +0200     |
-| `P`  | GMT offset with colon                                 | +02:00    |
-| `T`  | Time zone abbreviation                                | EST       |
-| `W`  | ISO-8601 week number                                  | 52        |
-| `N`  | ISO-8601 numeric representation of the day of the week| 1 (for Monday) |
+Letters not listed below pass through as literals; a backslash escapes the next byte.
+
+| Token | Meaning                                  | Example       |
+| ----- | ---------------------------------------- | ------------- |
+| `Y`   | Year, 4 digits                           | `2024`        |
+| `y`   | Year, 2 digits                           | `24`          |
+| `m`   | Month, 2 digits                          | `03`          |
+| `n`   | Month, no leading zero                   | `3`           |
+| `M`   | Month, 3-letter English abbreviation     | `Mar`         |
+| `F`   | Month, full English name                 | `March`       |
+| `d`   | Day of month, 2 digits                   | `05`          |
+| `j`   | Day of month, no leading zero            | `5`           |
+| `D`   | Weekday, 3-letter English                | `Sat`         |
+| `l`   | Weekday, full English name               | `Saturday`    |
+| `N`   | ISO weekday (1 = Mon ... 7 = Sun)        | `6`           |
+| `S`   | English ordinal suffix for day of month  | `th`          |
+| `w`   | Weekday (0 = Sun ... 6 = Sat)            | `6`           |
+| `z`   | Day of year, zero-based                  | `89`          |
+| `W`   | ISO week of year, 2 digits               | `13`          |
+| `o`   | ISO week-numbering year                  | `2024`        |
+| `t`   | Days in month                            | `31`          |
+| `L`   | Leap year flag                           | `1`           |
+| `H`   | Hour, 24-hour, 2 digits                  | `15`          |
+| `G`   | Hour, 24-hour, no leading zero           | `15`          |
+| `h`   | Hour, 12-hour, 2 digits                  | `03`          |
+| `g`   | Hour, 12-hour, no leading zero           | `3`           |
+| `i`   | Minute, 2 digits                         | `04`          |
+| `s`   | Second, 2 digits                         | `05`          |
+| `u`   | Microseconds, 6 digits                   | `123456`      |
+| `v`   | Milliseconds, 3 digits                   | `123`         |
+| `A`   | Uppercase AM/PM                          | `PM`          |
+| `a`   | Lowercase am/pm                          | `pm`          |
+| `U`   | Unix timestamp, seconds                  | `1711811045`  |
+| `O`   | Timezone offset                          | `+0800`       |
+| `P`   | Timezone offset with colon               | `+08:00`      |
+| `p`   | `P`, but UTC as `Z`                      | `Z`           |
+| `T`   | Timezone abbreviation                    | `UTC`         |
+| `e`   | Timezone identifier                      | `UTC`         |
+| `I`   | Daylight-saving flag                     | `0`           |
+| `Z`   | Timezone offset in seconds               | `28800`       |
+| `c`   | ISO 8601 date                            | `2024-03-30T15:04:05+00:00` |
+| `r`   | RFC 2822 date                            | `Sat, 30 Mar 2024 15:04:05 +0000` |
+| `B`   | Swatch Internet time                     | `669`         |
 
 **Example:**
 
@@ -127,12 +147,12 @@ weekday, err := filter.Weekday("2024-03-30")
 if err != nil {
     log.Fatal(err)
 }
-fmt.Println(weekday) // Outputs: Thursday
+fmt.Println(weekday) // Outputs: Saturday
 ```
 
 ### TimeAgo
 
-Returns a human-readable string representing the time difference between the current time and the input date.
+Returns a human-readable string representing the time difference between the current wall time and the input date. Use `filter.TimeAgoWithClock(filter.FixedClock{T: ...}, input)` when tests need a deterministic reference point. A nil clock passed to `TimeAgoWithClock` returns an error.
 
 **Example:**
 

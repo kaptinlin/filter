@@ -1,20 +1,21 @@
 module github.com/kaptinlin/filter
 
-go 1.26.2
+go 1.26.3
 
 require (
-	github.com/dromara/carbon/v2 v2.6.16
-	github.com/dustin/go-humanize v1.0.1
+	github.com/agentable/go-humanize v0.1.1
+	github.com/agentable/go-time v0.1.0
 	github.com/google/go-cmp v0.7.0
 	github.com/gosimple/slug v1.15.0
 	github.com/jinzhu/inflection v1.0.0
-	github.com/kaptinlin/jsonpointer v0.4.22
 	github.com/stretchr/testify v1.11.1
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-json-experiment/json v0.0.0-20260505212615-e40f80bf6836 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

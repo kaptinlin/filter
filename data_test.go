@@ -43,14 +43,14 @@ func TestExtractMap(t *testing.T) {
 			input:       map[string]any{"key1": "value1"},
 			key:         "key2",
 			expectError: true,
-			errorType:   ErrKeyNotFound,
+			errorType:   ErrNotFound,
 		},
 		{
 			name:        "invalid_nesting_key",
 			input:       map[string]any{"key1": "value1"},
 			key:         "key1.level2",
 			expectError: true,
-			errorType:   ErrInvalidKeyType,
+			errorType:   ErrInvalidInput,
 		},
 		{
 			name:     "empty_key_on_non_empty_map",
@@ -69,13 +69,29 @@ func TestExtractMap(t *testing.T) {
 			input:       map[string]any{"level1": map[string]any{"level2": map[string]any{}}},
 			key:         "level1.level2.nonexistent",
 			expectError: true,
-			errorType:   ErrKeyNotFound,
+			errorType:   ErrNotFound,
 		},
 		{
 			name:     "complex_nested_structure_with_arrays",
 			input:    map[string]any{"array": []any{[]any{"nested array value"}}},
 			key:      "array.0.0",
 			expected: "nested array value",
+		},
+		{
+			name: "escaped_dot_in_map_key",
+			input: map[string]any{
+				"user.name": map[string]any{"first.last": "Ada Lovelace"},
+			},
+			key:      `user\.name.first\.last`,
+			expected: "Ada Lovelace",
+		},
+		{
+			name: "escaped_backslash_in_map_key",
+			input: map[string]any{
+				`path\to`: "file",
+			},
+			key:      `path\\to`,
+			expected: "file",
 		},
 		{
 			name:     "typed_nested_map_and_slice",
@@ -88,7 +104,7 @@ func TestExtractMap(t *testing.T) {
 			input:       map[string]any{"int": 42},
 			key:         "int.0",
 			expectError: true,
-			errorType:   ErrInvalidKeyType,
+			errorType:   ErrInvalidInput,
 		},
 	}
 
@@ -145,14 +161,14 @@ func TestExtractSlice(t *testing.T) {
 			input:       []any{"value1", "value2"},
 			key:         "2",
 			expectError: true,
-			errorType:   ErrIndexOutOfRange,
+			errorType:   ErrNotFound,
 		},
 		{
 			name:        "empty_key_on_slice",
 			input:       []any{0, 1, 2},
 			key:         "",
 			expectError: true,
-			errorType:   ErrKeyNotFound,
+			errorType:   ErrNotFound,
 		},
 	}
 
@@ -190,14 +206,14 @@ func TestExtractEdgeCases(t *testing.T) {
 			input:       nil,
 			key:         "key1",
 			expectError: true,
-			errorType:   ErrUnsupportedType,
+			errorType:   ErrInvalidInput,
 		},
 		{
 			name:        "empty_key",
 			input:       map[string]any{"key": "value"},
 			key:         "",
 			expectError: true,
-			errorType:   ErrKeyNotFound,
+			errorType:   ErrNotFound,
 		},
 	}
 
@@ -702,22 +718,22 @@ func TestExtractComplexSelfReferentialStructures(t *testing.T) {
 		{
 			name:      "non_existent_field",
 			key:       "non_existent_field",
-			errorType: ErrKeyNotFound,
+			errorType: ErrNotFound,
 		},
 		{
 			name:      "index_out_of_range",
 			key:       "departments.5.name",
-			errorType: ErrIndexOutOfRange,
+			errorType: ErrNotFound,
 		},
 		{
 			name:      "invalid_path_through_primitive",
 			key:       "title.something",
-			errorType: ErrInvalidKeyType,
+			errorType: ErrInvalidInput,
 		},
 		{
 			name:      "key_not_found_in_map",
 			key:       "branches.north.city",
-			errorType: ErrKeyNotFound,
+			errorType: ErrNotFound,
 		},
 	}
 
@@ -871,22 +887,22 @@ func TestExtractUltraComplexStructures(t *testing.T) {
 		{
 			name:      "non_existent_field",
 			key:       "nonexistent",
-			errorType: ErrKeyNotFound,
+			errorType: ErrNotFound,
 		},
 		{
 			name:      "index_out_of_range",
 			key:       "matrix.3.0.id",
-			errorType: ErrIndexOutOfRange,
+			errorType: ErrNotFound,
 		},
 		{
 			name:      "non_existent_key_in_map",
 			key:       "nodes.nonexistent.id",
-			errorType: ErrKeyNotFound,
+			errorType: ErrNotFound,
 		},
 		{
 			name:      "invalid_path_through_primitive",
 			key:       "nodes.node1.id.something",
-			errorType: ErrInvalidKeyType,
+			errorType: ErrInvalidInput,
 		},
 	}
 
@@ -933,17 +949,16 @@ func TestExtractErrorHandling(t *testing.T) {
 		// Test invalid array index (non-numeric)
 		_, err := Extract(testData, "slice_field.invalid")
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrInvalidKeyType)
+		require.ErrorIs(t, err, ErrInvalidInput)
 	})
 
 	t.Run("ErrInvalidPathStep", func(t *testing.T) {
 		t.Parallel()
 
-		// This error would be triggered by jsonpointer for invalid path steps
-		// Since jsonpointer handles most path validation, we test edge cases
+		// Navigating through a scalar is a shape mismatch.
 		_, err := Extract(testData, "int_field.nested.deep")
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrInvalidKeyType)
+		require.ErrorIs(t, err, ErrInvalidInput)
 	})
 
 	t.Run("ErrNilPointer", func(t *testing.T) {
@@ -957,16 +972,16 @@ func TestExtractErrorHandling(t *testing.T) {
 		}
 		_, err := Extract(testDataWithNil, "pointer_field.value")
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrInvalidKeyType)
+		require.ErrorIs(t, err, ErrInvalidInput)
 	})
 
-	t.Run("ErrKeyNotFound_Map", func(t *testing.T) {
+	t.Run("ErrNotFound_Map", func(t *testing.T) {
 		t.Parallel()
 
 		// Test map key not found
 		_, err := Extract(testData, "map_field.nonexistent")
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrKeyNotFound)
+		require.ErrorIs(t, err, ErrNotFound)
 	})
 
 	t.Run("ErrFieldNotFound_Struct", func(t *testing.T) {
@@ -975,7 +990,7 @@ func TestExtractErrorHandling(t *testing.T) {
 		// Test struct field not found
 		_, err := Extract(testData, "nonexistent_field")
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrKeyNotFound)
+		require.ErrorIs(t, err, ErrNotFound)
 	})
 
 	t.Run("ErrIndexOutOfBounds_Slice", func(t *testing.T) {
@@ -984,16 +999,16 @@ func TestExtractErrorHandling(t *testing.T) {
 		// Test slice index out of bounds
 		_, err := Extract(testData, "slice_field.10")
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrIndexOutOfRange)
+		require.ErrorIs(t, err, ErrNotFound)
 	})
 
 	t.Run("ErrIndexOutOfBounds_NegativeIndex", func(t *testing.T) {
 		t.Parallel()
 
-		// Test negative array index - jsonpointer treats this as invalid index, not out of bounds
+		// Negative indices are invalid path steps, not out-of-range indices.
 		_, err := Extract(testData, "slice_field.-1")
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrInvalidKeyType)
+		require.ErrorIs(t, err, ErrInvalidInput)
 	})
 
 	t.Run("Complex_Error_Path", func(t *testing.T) {
@@ -1002,7 +1017,23 @@ func TestExtractErrorHandling(t *testing.T) {
 		// Test complex error path that triggers multiple error checks
 		_, err := Extract(testData, "nested_field.value.invalid.deep.path")
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrInvalidKeyType)
+		require.ErrorIs(t, err, ErrInvalidInput)
+	})
+
+	t.Run("Dangling_Escape", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := Extract(testData, `nested_field.value\`)
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrInvalidInput)
+	})
+
+	t.Run("Unsupported_Escape", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := Extract(testData, `nested_field\.value\q`)
+		require.Error(t, err)
+		require.ErrorIs(t, err, ErrInvalidInput)
 	})
 }
 
@@ -1133,22 +1164,22 @@ func TestExtractPointerHandling(t *testing.T) {
 		{
 			name:      "nil_pointer_in_chain",
 			key:       "level1_val.level2_val.level3_ptr.value",
-			errorType: ErrInvalidKeyType, // jsonpointer.ErrNilPointer maps to ErrInvalidKeyType
+			errorType: ErrInvalidInput,
 		},
 		{
 			name:      "nil_pointer_in_slice",
 			key:       "pointer_slice.2.value",
-			errorType: ErrInvalidKeyType, // jsonpointer.ErrNilPointer maps to ErrInvalidKeyType
+			errorType: ErrInvalidInput,
 		},
 		{
 			name:      "nil_pointer_in_map",
 			key:       "pointer_map.key3.value",
-			errorType: ErrInvalidKeyType, // jsonpointer.ErrNilPointer maps to ErrInvalidKeyType
+			errorType: ErrInvalidInput,
 		},
 		{
 			name:      "out_of_bounds_pointer_slice",
 			key:       "pointer_slice.10.value",
-			errorType: ErrIndexOutOfRange,
+			errorType: ErrNotFound,
 		},
 	}
 
@@ -1252,17 +1283,17 @@ func TestExtractInterfaceHandling(t *testing.T) {
 		{
 			name:      "nil_interface_navigation",
 			key:       "nil_val.something",
-			errorType: ErrInvalidKeyType,
+			errorType: ErrInvalidInput,
 		},
 		{
 			name:      "primitive_interface_navigation",
 			key:       "int_val.something",
-			errorType: ErrInvalidKeyType,
+			errorType: ErrInvalidInput,
 		},
 		{
 			name:      "nonexistent_interface_key",
 			key:       "nonexistent",
-			errorType: ErrKeyNotFound,
+			errorType: ErrNotFound,
 		},
 	}
 

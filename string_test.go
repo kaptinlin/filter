@@ -9,41 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDefault(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name         string
-		input        any
-		defaultValue any
-		expected     any
-	}{
-		{"Empty string Input", "", "default value", "default value"},
-		{"Non-Empty string Input", "actual value", "default value", "actual value"},
-		{"Empty Default Value", "", "", ""},
-		{"Non-Empty Input With Empty Default", "actual value", "", "actual value"},
-		{"Both Empty strings", "", "", ""},
-		{"String number Input and Default", "123", "456", "123"},
-		{"Empty string with number Default", "", 456, 456},
-		{"Nil Input", nil, "fallback", "fallback"},
-		{"False Input", false, "fallback", "fallback"},
-		{"True Input", true, "fallback", true},
-		{"Zero int (not falsy)", 0, "fallback", 0},
-		{"Non-nil non-empty", 42, "fallback", 42},
-		{"Nil with nil default", nil, nil, nil},
-		{"Slice input", []int{1, 2}, "fallback", []int{1, 2}},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			actual := Default(tt.input, tt.defaultValue)
-			require.Equal(t, tt.expected, actual)
-		})
-	}
-}
-
 func TestTrim(t *testing.T) {
 	t.Parallel()
 
@@ -478,12 +443,12 @@ func TestPluralize(t *testing.T) {
 		{-1, "apple", "", "apples"},
 		{2, "$dollar", "", "$dollars"},
 		{2, "mother-in-law", "", "mother-in-laws"},
-		{1, "%d cat", "%d cats", "1 cat"},
-		{2, "%d cat", "%d cats", "2 cats"},
-		{1, "%d mouse", "%d mice", "1 mouse"},
-		{2, "%d mouse", "%d mice", "2 mice"},
-		{1, "", "%d mice", "1 mice"},
-		{2, "%d mouse", "", "2 mouses"},
+		{1, "%d cat", "%d cats", "%d cat"},
+		{2, "%d cat", "%d cats", "%d cats"},
+		{1, "%d mouse", "%d mice", "%d mouse"},
+		{2, "%d mouse", "%d mice", "%d mice"},
+		{1, "", "%d mice", "%d mice"},
+		{2, "%d mouse", "", "%d mouses"},
 	}
 
 	for _, tt := range tests {
@@ -825,50 +790,92 @@ func TestRemoveLast(t *testing.T) {
 	}
 }
 
-func TestSlice(t *testing.T) {
+func TestDefault(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name     string
 		input    any
-		offset   int
-		length   []int
+		fallback any
 		expected any
-		wantErr  bool
 	}{
-		{"String single char", "hello", 1, nil, "e", false},
-		{"String with length", "hello", 1, []int{3}, "ell", false},
-		{"String negative offset", "hello", -3, []int{2}, "ll", false},
-		{"String out of bounds", "hello", 10, nil, "", false},
-		{"String negative out of bounds", "hello", -10, nil, "", false},
-		{"String zero length", "hello", 1, []int{0}, "", false},
-		{"String negative length", "hello", 1, []int{-1}, "", false},
-		{"String empty", "", 0, nil, "", false},
-		{"String UTF-8", "こんにちは", 1, []int{2}, "んに", false},
-		{"Slice single element", []any{1, 2, 3, 4}, 1, nil, []any{2}, false},
-		{"Slice with length", []any{1, 2, 3, 4}, 1, []int{2}, []any{2, 3}, false},
-		{"Slice negative offset", []any{1, 2, 3, 4}, -2, []int{2}, []any{3, 4}, false},
-		{"Typed slice with offset", []string{"a", "b", "c", "d"}, 1, []int{2}, []any{"b", "c"}, false},
-		{"Slice out of bounds", []any{1, 2, 3}, 10, nil, []any{}, false},
-		{"Slice zero length", []any{1, 2, 3}, 1, []int{0}, []any{}, false},
-		{"Slice negative length", []any{1, 2, 3}, 1, []int{-1}, []any{}, false},
-		{"Invalid type", 123, 0, nil, nil, true},
+		{"nil falls back", nil, "fallback", "fallback"},
+		{"false falls back", false, "fallback", "fallback"},
+		{"empty string is truthy", "", "fallback", ""},
+		{"zero int is truthy", 0, "fallback", 0},
+		{"non-empty string", "value", "fallback", "value"},
+		{"true keeps input", true, "fallback", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-
-			result, err := Slice(tt.input, tt.offset, tt.length...)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				if diff := cmp.Diff(tt.expected, result); diff != "" {
-					t.Fatalf("Slice() mismatch (-want +got):\n%s", diff)
-				}
-			}
+			require.Equal(t, tt.expected, Default(tt.input, tt.fallback))
 		})
 	}
+}
+
+func TestSliceString(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		input    string
+		offset   int
+		length   []int
+		expected string
+	}{
+		{"single char", "hello", 1, nil, "e"},
+		{"with length", "hello", 1, []int{3}, "ell"},
+		{"negative offset", "hello", -3, []int{2}, "ll"},
+		{"out of bounds offset", "hello", 10, []int{1}, ""},
+		{"negative out of bounds", "hello", -10, []int{1}, ""},
+		{"empty input", "", 0, []int{1}, ""},
+		{"UTF-8 multibyte", "こんにちは", 1, []int{2}, "んに"},
+		{"length exceeds remaining", "hello", 3, []int{99}, "lo"},
+		{"zero length", "hello", 1, []int{0}, ""},
+		{"negative length", "hello", 1, []int{-1}, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := Slice(tt.input, tt.offset, tt.length...)
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func TestSliceArray(t *testing.T) {
+	t.Parallel()
+
+	t.Run("any slice", func(t *testing.T) {
+		t.Parallel()
+		got, err := Slice([]any{1, 2, 3, 4}, 1, 2)
+		require.NoError(t, err)
+		if diff := cmp.Diff([]any{2, 3}, got); diff != "" {
+			t.Fatalf("Slice() mismatch (-want +got):\n%s", diff)
+		}
+	})
+	t.Run("typed slice", func(t *testing.T) {
+		t.Parallel()
+		got, err := Slice([]string{"a", "b", "c", "d"}, -2, 2)
+		require.NoError(t, err)
+		if diff := cmp.Diff([]any{"c", "d"}, got); diff != "" {
+			t.Fatalf("Slice() mismatch (-want +got):\n%s", diff)
+		}
+	})
+	t.Run("out of bounds", func(t *testing.T) {
+		t.Parallel()
+		got, err := Slice([]any{1, 2, 3}, 10, 5)
+		require.NoError(t, err)
+		require.Empty(t, got)
+	})
+}
+
+func TestSliceRejectsNonStringNonSlice(t *testing.T) {
+	t.Parallel()
+	_, err := Slice(42, 0, 1)
+	require.ErrorIs(t, err, ErrInvalidInput)
 }
 
 func TestURLEncode(t *testing.T) {
@@ -885,8 +892,7 @@ func TestURLEncode(t *testing.T) {
 		{"nospace", "nospace"},
 	}
 	for _, tt := range tests {
-		result := URLEncode(tt.input)
-		require.Equal(t, tt.expected, result)
+		require.Equal(t, tt.expected, URLEncode(tt.input))
 	}
 }
 
@@ -907,7 +913,7 @@ func TestURLDecode(t *testing.T) {
 	for _, tt := range tests {
 		result, err := URLDecode(tt.input)
 		if tt.wantErr {
-			require.Error(t, err)
+			require.ErrorIs(t, err, ErrFormat)
 		} else {
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, result)

@@ -4,69 +4,115 @@ import "math"
 
 // Abs returns the absolute value of input.
 func Abs(input any) (float64, error) {
-	val, err := toFloat64(input)
+	v, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	return math.Abs(val), nil
+	return math.Abs(v), nil
 }
 
-// AtLeast returns the larger of input and minimum.
+// AtLeast returns max(input, minimum).
 func AtLeast(input, minimum any) (float64, error) {
-	val, err := toFloat64(input)
+	v, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	minVal, err := toFloat64(minimum)
+	m, err := toFloat64(minimum)
 	if err != nil {
 		return 0, err
 	}
-	return max(val, minVal), nil
+	return max(v, m), nil
 }
 
-// AtMost returns the smaller of input and maximum.
+// AtMost returns min(input, maximum).
 func AtMost(input, maximum any) (float64, error) {
-	val, err := toFloat64(input)
+	v, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	maxVal, err := toFloat64(maximum)
+	m, err := toFloat64(maximum)
 	if err != nil {
 		return 0, err
 	}
-	return min(val, maxVal), nil
+	return min(v, m), nil
 }
 
-// Round rounds input to precision decimal places.
-func Round(input, precision any) (float64, error) {
-	val, err := toFloat64(input)
+// Round rounds input to the given number of decimal places.
+//
+// decimals accepts any numeric type (int, float, or numeric string) so
+// callers from template runtimes do not need to coerce first.
+func Round(input, decimals any) (float64, error) {
+	v, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	prec, err := toFloat64(precision)
+	d, err := toFloat64(decimals)
 	if err != nil {
 		return 0, err
 	}
-	multiplier := math.Pow(10, prec)
-	return math.Round(val*multiplier) / multiplier, nil
+	multiplier := math.Pow(10, d)
+	return math.Round(v*multiplier) / multiplier, nil
 }
 
 // Floor rounds input down to the nearest whole number.
 func Floor(input any) (float64, error) {
-	val, err := toFloat64(input)
+	v, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	return math.Floor(val), nil
+	return math.Floor(v), nil
 }
 
 // Ceil rounds input up to the nearest whole number.
 func Ceil(input any) (float64, error) {
-	val, err := toFloat64(input)
+	v, err := toFloat64(input)
 	if err != nil {
 		return 0, err
 	}
-	return math.Ceil(val), nil
+	return math.Ceil(v), nil
+}
+
+// Plus adds addend to input. Implements the Liquid `plus` filter.
+func Plus(input, addend any) (float64, error) {
+	return binaryOp(input, addend, func(a, b float64) (float64, error) {
+		return a + b, nil
+	})
+}
+
+// Minus subtracts subtrahend from input. Implements the Liquid `minus` filter.
+func Minus(input, subtrahend any) (float64, error) {
+	return binaryOp(input, subtrahend, func(a, b float64) (float64, error) {
+		return a - b, nil
+	})
+}
+
+// Times multiplies input by multiplier. Implements the Liquid `times` filter.
+func Times(input, multiplier any) (float64, error) {
+	return binaryOp(input, multiplier, func(a, b float64) (float64, error) {
+		return a * b, nil
+	})
+}
+
+// Divide divides input by divisor. Implements the Liquid `divided_by` filter.
+// Returns *Error{Kind: KindArithmetic} when divisor is zero.
+func Divide(input, divisor any) (float64, error) {
+	return binaryOp(input, divisor, func(a, b float64) (float64, error) {
+		if b == 0 {
+			return 0, arithmetic("Divide", errDivisionByZero)
+		}
+		return a / b, nil
+	})
+}
+
+// Modulo returns the remainder of input divided by modulus.
+// Returns *Error{Kind: KindArithmetic} when modulus is zero.
+func Modulo(input, modulus any) (float64, error) {
+	return binaryOp(input, modulus, func(a, b float64) (float64, error) {
+		if b == 0 {
+			return 0, arithmetic("Modulo", errModulusByZero)
+		}
+		return math.Mod(a, b), nil
+	})
 }
 
 func binaryOp(a, b any, op func(float64, float64) (float64, error)) (float64, error) {
@@ -79,45 +125,4 @@ func binaryOp(a, b any, op func(float64, float64) (float64, error)) (float64, er
 		return 0, err
 	}
 	return op(x, y)
-}
-
-// Plus adds two numbers.
-func Plus(input, addend any) (float64, error) {
-	return binaryOp(input, addend, func(a, b float64) (float64, error) {
-		return a + b, nil
-	})
-}
-
-// Minus subtracts the second value from the first.
-func Minus(input, subtrahend any) (float64, error) {
-	return binaryOp(input, subtrahend, func(a, b float64) (float64, error) {
-		return a - b, nil
-	})
-}
-
-// Times multiplies the first value by the second.
-func Times(input, multiplier any) (float64, error) {
-	return binaryOp(input, multiplier, func(a, b float64) (float64, error) {
-		return a * b, nil
-	})
-}
-
-// Divide divides the first value by the second.
-func Divide(input, divisor any) (float64, error) {
-	return binaryOp(input, divisor, func(a, b float64) (float64, error) {
-		if b == 0 {
-			return 0, ErrDivisionByZero
-		}
-		return a / b, nil
-	})
-}
-
-// Modulo returns the remainder of dividing the first value by the second.
-func Modulo(input, modulus any) (float64, error) {
-	return binaryOp(input, modulus, func(a, b float64) (float64, error) {
-		if b == 0 {
-			return 0, ErrModulusByZero
-		}
-		return math.Mod(a, b), nil
-	})
 }

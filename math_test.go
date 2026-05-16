@@ -857,7 +857,7 @@ func TestDivide(t *testing.T) {
 			divisor:     0,
 			expected:    0,
 			expectError: true,
-			errorType:   ErrDivisionByZero,
+			errorType:   ErrArithmetic,
 		},
 		{
 			name:        "zero divided by any number",
@@ -911,7 +911,7 @@ func TestDivide(t *testing.T) {
 			if tt.expectError {
 				require.Error(t, err)
 				if tt.errorType != nil {
-					require.Equal(t, tt.errorType, err, "The expected and actual error should match.")
+					require.ErrorIs(t, err, tt.errorType, "The expected and actual error should match.")
 				}
 			} else {
 				require.NoError(t, err)
@@ -959,7 +959,7 @@ func TestModulo(t *testing.T) {
 			modulus:     0,
 			expected:    0,
 			expectError: true,
-			errorType:   ErrModulusByZero,
+			errorType:   ErrArithmetic,
 		},
 		{
 			name:        "zero modulus any number",

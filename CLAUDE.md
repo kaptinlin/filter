@@ -18,15 +18,18 @@ go test -race ./...    # Direct test command
 
 # Linting
 task lint              # Run golangci-lint and go mod tidy checks
-make golangci-lint     # Run only golangci-lint
-make tidy-lint         # Verify go.mod/go.sum are clean
+task golangci-lint     # Run only golangci-lint
+task tidy-lint         # Verify go.mod/go.sum are clean
 
-# Build
-make all               # Run lint + test
+# Verification
+task verify            # Full pipeline: deps, fmt, vet, lint, test
+task fmt               # Format code
+task vet               # Run go vet
 task clean             # Remove ./bin directory
 
 # Dependencies
 task deps              # Download and tidy dependencies
+task deps:update       # Update all dependencies
 ```
 
 ## Architecture
@@ -35,14 +38,15 @@ Single-package design organized by functional domain:
 
 ```
 filter/
-├── string.go          # String manipulation (trim, case, escape, encode, truncate, replace, slice)
-├── array.go           # Slice operations (unique, join, sort, where, find, compact, concat)
-├── date.go            # Date/time formatting using carbon library
-├── number.go          # Number formatting (including byte formatting)
+├── string.go          # String manipulation (trim, case, escape, encode, truncate, replace, slice, default)
+├── array.go           # Slice operations (unique, unique-by, join, sort, where, find, compact, concat, random, shuffle)
+├── time.go            # Date/time formatting via agentable/go-time, plus Clock-injected TimeAgoWithClock
+├── number.go          # Number formatting (#,###.## DSL) and Bytes (SI units via agentable/go-humanize)
 ├── math.go            # Mathematical operations (abs, round, arithmetic)
 ├── data.go            # Nested data extraction with dot notation
+├── rand.go            # SeededRand for deterministic RandomWithRand/ShuffleWithRand tests
 ├── utils.go           # Type conversion utilities (toFloat64, toSlice)
-├── errors.go          # Centralized error definitions
+├── errors.go          # *Error{Kind, Op, Path, Cause} model with four Kind sentinels
 └── acronyms.go        # Acronym handling for case conversions
 ```
 
@@ -70,6 +74,12 @@ func Slice(input any, offset int, length ...int) (any, error)
 
 // Array functions: any input (slice/array), typed output
 func Unique(input any) ([]any, error)
+func UniqueBy(input any, key string) ([]any, error)
+func SumBy(input any, key string) (float64, error)
+func Random(input any) (any, error)
+func RandomWithRand(r *rand.Rand, input any) (any, error)
+func Shuffle(input any) ([]any, error)
+func ShuffleWithRand(r *rand.Rand, input any) ([]any, error)
 func Sort(input any, key ...string) ([]any, error)
 func Where(input any, key string, value ...any) ([]any, error)
 func Find(input any, key string, value any) (any, error)
@@ -80,21 +90,17 @@ func Extract(input any, key string) (any, error)
 
 ### Error Types
 
-All errors are defined in `errors.go`:
+All failures return `*Error{Kind, Op, Path, Cause}`. Callers branch on `Kind`
+via `errors.Is` against four package-level sentinels (defined in `errors.go`):
 
-- `ErrNotNumeric` - Non-numeric input to numeric functions
-- `ErrInvalidTimeFormat` - Invalid time parsing
-- `ErrUnsupportedType` - Unsupported data types
-- `ErrNotSlice` - Non-slice input to slice functions
-- `ErrEmptySlice` - Operations on empty slices
-- `ErrInvalidArguments` - Invalid function arguments
-- `ErrKeyNotFound` - Missing keys in data extraction
-- `ErrIndexOutOfRange` - Invalid array/slice indices
-- `ErrInvalidKeyType` - Invalid key types in data extraction
-- `ErrDivisionByZero` - Division by zero
-- `ErrModulusByZero` - Modulus by zero
-- `ErrUnsupportedSizeType` - Unsupported types in Size filter
-- `ErrNegativeValue` - Non-negative value requirements
+- `ErrInvalidInput` (`KindInvalidInput`) - Wrong type, wrong shape, or out of range
+- `ErrNotFound` (`KindNotFound`) - Missing path, key, or index in the input
+- `ErrArithmetic` (`KindArithmetic`) - Division by zero, modulus by zero, etc.
+- `ErrFormat` (`KindFormat`) - Parse failures (date layout, base64, URL escape, etc.)
+
+`Op` and `Path` are diagnostic context only — `Is` matches by `Kind`. Build
+errors through the internal helpers `invalidInput`, `notFound`, `arithmetic`,
+and `formatErr`; never construct `*Error` literals at call sites.
 
 ## Coding Rules
 
@@ -166,14 +172,14 @@ func TestFunction(t *testing.T) {
 ## Dependencies
 
 ### Production Dependencies
-- `github.com/dromara/carbon/v2` - Date/time handling with rich formatting
-- `github.com/kaptinlin/jsonpointer` - JSON pointer traversal for `Extract()`
+- `github.com/agentable/go-time` - Date/time parsing and formatting (`time.go`)
+- `github.com/agentable/go-humanize` - SI byte, number, and relative time formatting (`number.go`, `time.go`)
 - `github.com/gosimple/slug` - URL slug generation for `Slugify()`
 - `github.com/jinzhu/inflection` - Word pluralization for `Pluralize()`
-- `github.com/dustin/go-humanize` - Human-readable formatting for `Bytes()`
 
 ### Test Dependencies
 - `github.com/stretchr/testify` - Assertions and test utilities
+- `github.com/google/go-cmp` - Deep comparison in table-driven tests
 
 ### Dependency Policy
 - Minimize external dependencies
@@ -184,25 +190,27 @@ func TestFunction(t *testing.T) {
 
 ### Pattern
 ```go
-// Always return errors, never panic
+// Always return errors, never panic. Build errors through the internal
+// helpers (invalidInput, notFound, arithmetic, formatErr) so that Op and
+// Path are populated consistently.
 func Function(input any) (result any, err error) {
     if invalid {
-        return nil, ErrInvalidArguments
+        return nil, invalidInput("Function", nil)
     }
     // process
     return result, nil
 }
 
-// Use errors.Is() for error checking
-if errors.Is(err, ErrKeyNotFound) {
-    // handle missing key
+// Callers branch on Kind via the four sentinels.
+if errors.Is(err, ErrNotFound) {
+    // handle missing key/path/index
 }
 ```
 
 ### Error Wrapping
-- Wrap errors with context using `fmt.Errorf("%w: context", err)`
-- Map external library errors to filter errors (see `data.go:mapJSONPointerError`)
-- Preserve error chains for debugging
+- Wrap underlying causes through the helpers above; do not hand-roll `*Error`
+- Map external library errors to a Kind (see `data.go:mapJSONPointerError`)
+- Preserve cause chains via `Unwrap` so `errors.Is` keeps working
 
 ## Performance
 

@@ -151,6 +151,26 @@ func ExampleURLEncode() {
 	// Output: hello+world
 }
 
+func ExampleDefault() {
+	fmt.Printf("%q\n", filter.Default("", "fallback"))
+	fmt.Printf("%q\n", filter.Default(nil, "fallback"))
+	fmt.Printf("%q\n", filter.Default("value", "fallback"))
+	// Output:
+	// ""
+	// "fallback"
+	// "value"
+}
+
+func ExampleSlice() {
+	str, _ := filter.Slice("hello", 1, 3)
+	fmt.Println(str)
+	arr, _ := filter.Slice([]any{1, 2, 3, 4}, 1, 2)
+	fmt.Println(arr)
+	// Output:
+	// ell
+	// [2 3]
+}
+
 func ExampleBase64Encode() {
 	fmt.Println(filter.Base64Encode("hello world"))
 	// Output: aGVsbG8gd29ybGQ=
@@ -194,18 +214,6 @@ func ExampleWhere() {
 	// Output:
 	// Shoes
 	// Pants
-}
-
-func ExampleDefault() {
-	fmt.Println(filter.Default("", "fallback"))
-	fmt.Println(filter.Default("value", "fallback"))
-	fmt.Println(filter.Default(nil, "fallback"))
-	fmt.Println(filter.Default(false, "fallback"))
-	// Output:
-	// fallback
-	// value
-	// fallback
-	// fallback
 }
 
 func ExampleCapitalize() {

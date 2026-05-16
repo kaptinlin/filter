@@ -6,21 +6,18 @@ The `filter` package provides powerful functions for extracting nested values fr
 
 ### Extract
 
-Retrieves a nested value from any supported data structure using a dot-separated key path. This function supports complex nested structures and provides comprehensive error handling.
+Retrieves a nested value from any supported data structure using a dot-separated key path.
 
 **Supported Data Types:**
-- Maps (`map[string]interface{}` and similar)
-- Slices and arrays (`[]interface{}`, `[N]Type`, multi-dimensional arrays)
+- Maps (`map[string]any` and similar)
+- Slices and arrays (`[]any`, `[N]Type`, multi-dimensional arrays)
 - Structs (with JSON tags or exported field names)
 - Pointers to any of the above
 - Interfaces containing any of the above
-- Complex nested combinations
 
-**Error Handling:**
-- `ErrKeyNotFound`: Key or field doesn't exist
-- `ErrIndexOutOfRange`: Array/slice index out of bounds
-- `ErrInvalidKeyType`: Invalid navigation (e.g., into primitive types)
-- `ErrUnsupportedType`: Input is nil or unsupported
+**Path syntax:** dot-separated object keys and decimal array indices (for example `users.0.name`). Use `\.` for a literal dot in a key and `\\` for a literal backslash. JSONPath wildcards (`*`, `[?(...)]`), bracket-quoted keys, and recursive descent (`..`) are not supported.
+
+**Errors:** missing keys or out-of-range indices match `errors.Is(err, filter.ErrNotFound)`. Indexing into a scalar, or passing nil/unsupported input, matches `filter.ErrInvalidInput`.
 
 **Example with Map:**
 
@@ -50,6 +47,12 @@ if err != nil {
     log.Fatal(err)
 }
 fmt.Println(lat) // Outputs: 40.7128
+
+literal, err := filter.Extract(map[string]any{"user.name": "Ada"}, `user\.name`)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(literal) // Outputs: "Ada"
 ```
 
 **Example with Slice:**
@@ -208,29 +211,29 @@ fmt.Println(skill) // Outputs: "JavaScript"
 **Error Handling Examples:**
 
 ```go
-data := map[string]interface{}{
-    "user": map[string]interface{}{
+data := map[string]any{
+    "user": map[string]any{
         "name": "John",
         "age":  30,
     },
 }
 
-// Key not found
+// Missing key or out-of-range index
 _, err := filter.Extract(data, "user.email")
-if errors.Is(err, filter.ErrKeyNotFound) {
+if errors.Is(err, filter.ErrNotFound) {
     fmt.Println("Email field not found")
 }
 
-// Invalid navigation into primitive
+// Indexing into a scalar, or any other shape mismatch
 _, err = filter.Extract(data, "user.age.invalid")
-if errors.Is(err, filter.ErrInvalidKeyType) {
+if errors.Is(err, filter.ErrInvalidInput) {
     fmt.Println("Cannot navigate into primitive value")
 }
 
-// Index out of range
+// Out-of-range indices also surface as ErrNotFound
 slice := []string{"a", "b", "c"}
 _, err = filter.Extract(slice, "5")
-if errors.Is(err, filter.ErrIndexOutOfRange) {
+if errors.Is(err, filter.ErrNotFound) {
     fmt.Println("Index out of range")
 }
 ```

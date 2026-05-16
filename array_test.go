@@ -72,18 +72,77 @@ func TestUnique_NonComparableValues(t *testing.T) {
 	input := []any{
 		map[string]any{"name": "shirt", "meta": []any{"blue", 42}},
 		map[string]any{"name": "shirt", "meta": []any{"blue", 42}},
-		map[string]any{"name": "pants", "meta": []any{"black", 40}},
 	}
 
-	got, err := Unique(input)
+	_, err := Unique(input)
+	require.ErrorIs(t, err, ErrInvalidInput)
+}
+
+func TestUniqueBy(t *testing.T) {
+	t.Parallel()
+
+	products := []any{
+		map[string]any{"handle": "shirt", "variant": "red"},
+		map[string]any{"handle": "shoe", "variant": "blue"},
+		map[string]any{"handle": "shirt", "variant": "green"},
+	}
+
+	got, err := UniqueBy(products, "handle")
 	require.NoError(t, err)
 	want := []any{
-		map[string]any{"name": "shirt", "meta": []any{"blue", 42}},
-		map[string]any{"name": "pants", "meta": []any{"black", 40}},
+		map[string]any{"handle": "shirt", "variant": "red"},
+		map[string]any{"handle": "shoe", "variant": "blue"},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Fatalf("Unique() mismatch (-want +got):\n%s", diff)
+		t.Fatalf("UniqueBy() mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func TestUniqueByNestedKey(t *testing.T) {
+	t.Parallel()
+
+	input := []any{
+		map[string]any{"user": map[string]any{"id": 1}, "name": "Alice"},
+		map[string]any{"user": map[string]any{"id": 2}, "name": "Bob"},
+		map[string]any{"user": map[string]any{"id": 1}, "name": "Alicia"},
+	}
+
+	got, err := UniqueBy(input, "user.id")
+	require.NoError(t, err)
+	want := []any{
+		map[string]any{"user": map[string]any{"id": 1}, "name": "Alice"},
+		map[string]any{"user": map[string]any{"id": 2}, "name": "Bob"},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("UniqueBy() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestUniqueByNonComparableKey(t *testing.T) {
+	t.Parallel()
+
+	input := []any{
+		map[string]any{"tags": []any{"sale", "new"}, "name": "Shoes"},
+		map[string]any{"tags": []any{"clearance"}, "name": "Hat"},
+		map[string]any{"tags": []any{"sale", "new"}, "name": "Shirt"},
+	}
+
+	got, err := UniqueBy(input, "tags")
+	require.NoError(t, err)
+	want := []any{
+		map[string]any{"tags": []any{"sale", "new"}, "name": "Shoes"},
+		map[string]any{"tags": []any{"clearance"}, "name": "Hat"},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("UniqueBy() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestUniqueByMissingKey(t *testing.T) {
+	t.Parallel()
+
+	_, err := UniqueBy([]any{map[string]any{"name": "Shoes"}}, "handle")
+	require.ErrorIs(t, err, ErrNotFound)
 }
 
 func TestJoin(t *testing.T) {
@@ -114,8 +173,8 @@ func TestJoin(t *testing.T) {
 			name:      "Join with empty separator",
 			input:     []any{"apple", "banana", "cherry"},
 			separator: "",
-			want:      "",
-			expectErr: true,
+			want:      "applebananacherry",
+			expectErr: false,
 		},
 		{
 			name:      "Empty slice",
@@ -317,6 +376,26 @@ func TestRandom(t *testing.T) {
 	}
 }
 
+func TestRandomWithRandDeterministic(t *testing.T) {
+	t.Parallel()
+
+	input := []any{"red", "green", "blue", "yellow"}
+	a, err := RandomWithRand(SeededRand(1, 2), input)
+	require.NoError(t, err)
+	b, err := RandomWithRand(SeededRand(1, 2), input)
+	require.NoError(t, err)
+
+	require.Equal(t, a, b)
+	require.Contains(t, input, a)
+}
+
+func TestRandomWithRandRejectsNilRand(t *testing.T) {
+	t.Parallel()
+
+	_, err := RandomWithRand(nil, []any{1})
+	require.ErrorIs(t, err, ErrInvalidInput)
+}
+
 func TestReverse(t *testing.T) {
 	t.Parallel()
 
@@ -429,6 +508,32 @@ func TestShuffle(t *testing.T) {
 	}
 }
 
+func TestShuffleWithRandDeterministic(t *testing.T) {
+	t.Parallel()
+
+	input := []any{1, 2, 3, 4, 5}
+	a, err := ShuffleWithRand(SeededRand(1, 2), input)
+	require.NoError(t, err)
+	b, err := ShuffleWithRand(SeededRand(1, 2), input)
+	require.NoError(t, err)
+
+	if diff := cmp.Diff(a, b); diff != "" {
+		t.Fatalf("ShuffleWithRand() mismatch (-a +b):\n%s", diff)
+	}
+	if diff := cmp.Diff(input, a, cmpopts.SortSlices(func(a, b any) bool {
+		return fmt.Sprint(a) < fmt.Sprint(b)
+	})); diff != "" {
+		t.Fatalf("ShuffleWithRand() changed elements (-want +got):\n%s", diff)
+	}
+}
+
+func TestShuffleWithRandRejectsNilRand(t *testing.T) {
+	t.Parallel()
+
+	_, err := ShuffleWithRand(nil, []any{1})
+	require.ErrorIs(t, err, ErrInvalidInput)
+}
+
 func TestSize(t *testing.T) {
 	t.Parallel()
 
@@ -481,10 +586,10 @@ func TestSize(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name:      "Unsupported input type (string)",
-			input:     "hello",
-			want:      0,
-			expectErr: true,
+			name:      "Size of UTF-8 string",
+			input:     "a界b",
+			want:      3,
+			expectErr: false,
 		},
 		{
 			name:      "Unsupported input type (number)",
@@ -699,6 +804,42 @@ func TestSum(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSumBy(t *testing.T) {
+	t.Parallel()
+
+	products := []any{
+		map[string]any{"title": "Shoes", "price": 50},
+		map[string]any{"title": "Shirt", "price": "30.5"},
+		map[string]any{"title": "Hat", "price": 10.25},
+	}
+
+	got, err := SumBy(products, "price")
+	require.NoError(t, err)
+	require.InEpsilon(t, 90.75, got, 1e-9)
+}
+
+func TestSumByEmpty(t *testing.T) {
+	t.Parallel()
+
+	got, err := SumBy([]any{}, "price")
+	require.NoError(t, err)
+	require.Equal(t, 0.0, got)
+}
+
+func TestSumByMissingKey(t *testing.T) {
+	t.Parallel()
+
+	_, err := SumBy([]any{map[string]any{"title": "Shoes"}}, "price")
+	require.ErrorIs(t, err, ErrNotFound)
+}
+
+func TestSumByNonNumeric(t *testing.T) {
+	t.Parallel()
+
+	_, err := SumBy([]any{map[string]any{"price": "free"}}, "price")
+	require.ErrorIs(t, err, ErrFormat)
 }
 
 func TestAverage(t *testing.T) {
@@ -1340,11 +1481,12 @@ func TestFind(t *testing.T) {
 	}
 
 	tests := []struct {
-		name  string
-		input any
-		key   string
-		value any
-		want  any
+		name    string
+		input   any
+		key     string
+		value   any
+		want    any
+		wantErr error
 	}{
 		{
 			name:  "Find existing",
@@ -1354,18 +1496,18 @@ func TestFind(t *testing.T) {
 			want:  map[string]any{"handle": "shirt", "price": 30.0},
 		},
 		{
-			name:  "Find not existing",
-			input: products,
-			key:   "handle",
-			value: "hat",
-			want:  nil,
+			name:    "Find not existing",
+			input:   products,
+			key:     "handle",
+			value:   "hat",
+			wantErr: ErrNotFound,
 		},
 		{
-			name:  "Find in empty slice",
-			input: []any{},
-			key:   "handle",
-			value: "shoes",
-			want:  nil,
+			name:    "Find in empty slice",
+			input:   []any{},
+			key:     "handle",
+			value:   "shoes",
+			wantErr: ErrNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -1373,6 +1515,10 @@ func TestFind(t *testing.T) {
 			t.Parallel()
 
 			got, err := Find(tt.input, tt.key, tt.value)
+			if tt.wantErr != nil {
+				require.ErrorIs(t, err, tt.wantErr)
+				return
+			}
 			require.NoError(t, err)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Fatalf("result mismatch (-want +got):\n%s", diff)

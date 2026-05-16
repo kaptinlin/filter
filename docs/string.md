@@ -6,13 +6,19 @@ The `filter` package provides a concise set of utilities designed to simplify co
 
 ### Default
 
-Returns `defaultValue` if the input is `nil`, `false`, or an empty string. Accepts any type.
+Returns `defaultValue` if the input is `nil` or `false`. Accepts any type.
+Empty strings, zero numbers, and empty collections are returned unchanged.
+
+This is an existence/defaulting helper, not a blank-string helper: `""`
+means "the caller intentionally supplied an empty string." If a template
+adapter wants blank strings to fall back, it should implement that policy
+outside this package.
 
 **Example:**
 
 ```go
 result := filter.Default("", "fallback")
-fmt.Println(result) // Outputs: "fallback"
+fmt.Println(result) // Outputs: ""
 
 result = filter.Default(nil, "fallback")
 fmt.Println(result) // Outputs: "fallback"
@@ -158,13 +164,16 @@ fmt.Println(result) // Outputs: "hello world"
 
 ### Length
 
-Returns the number of characters in a string, accounting for UTF-8 encoding.
+Returns the number of Unicode code points in a string (`utf8.RuneCountInString`), not the number of bytes.
 
 **Example:**
 
 ```go
 result := filter.Length("hello")
 fmt.Println(result) // Outputs: 5
+
+result = filter.Length("héllo")
+fmt.Println(result) // Outputs: 5 (not 6 — `é` is one rune, two bytes)
 ```
 
 ### Upper
@@ -249,7 +258,7 @@ fmt.Println(result) // Outputs: "hello-world"
 
 ### Slugify
 
-Converts a string into a URL-friendly "slug", ensuring it is safe for use in URLs and filenames by transliterating Unicode characters to ASCII, and replacing or removing special characters.
+Converts a string into a URL-friendly slug by transliterating Unicode characters to ASCII and replacing or removing special characters. Slug generation is intentionally opinionated; callers that need product-specific URL policy should own that policy at their boundary.
 
 **Example:**
 
@@ -266,7 +275,7 @@ fmt.Println(anotherText) // Outputs: "ying-shi"
 
 ### Pluralize
 
-Determines the singular or plural form of a word based on a numeric value.
+Determines the singular or plural form of an English word based on a numeric value. When one form is omitted, the missing form is derived with best-effort English inflection. The function does not interpolate the count into the returned string.
 
 **Example:**
 
@@ -275,7 +284,7 @@ result := filter.Pluralize(2, "apple", "")
 fmt.Println(result) // Outputs: "apples"
 
 result := filter.Pluralize(1, "%d message", "%d messages")
-fmt.Println(result) // Outputs: "1 message"
+fmt.Println(result) // Outputs: "%d message"
 ```
 
 ### Ordinalize
@@ -322,7 +331,7 @@ fmt.Println(result) // Outputs: "hello beautiful--"
 
 ### Escape
 
-HTML-escapes a string, converting `<`, `>`, `&`, `"`, `'` to HTML entities.
+HTML-escapes a string, converting `<`, `>`, `&`, `"`, `'` to HTML entities. This is plain entity escaping and not a context-aware XSS defense — for HTML attribute or script contexts use `html/template`.
 
 **Example:**
 
@@ -347,7 +356,7 @@ fmt.Println(result) // Outputs: "1 &lt; 2 &amp; 3"
 
 ### StripHTML
 
-Removes all HTML tags, script blocks, style blocks, and comments from the input.
+Removes HTML tags, script blocks, style blocks, and comments using regex tag stripping. Best-effort only; it is **not** a security boundary. For HTML sanitization use a dedicated library such as [bluemonday](https://github.com/microcosm-cc/bluemonday).
 
 **Example:**
 
@@ -372,19 +381,22 @@ fmt.Println(result) // Outputs: "helloworld"
 
 ### Slice
 
-Extracts a substring or sub-slice. Negative offset counts from end. If length is omitted, returns a single character/element.
+Extracts a substring or sub-slice. Strings are indexed by **rune** (Unicode code point), slices and arrays by **element** — never by bytes. `length` defaults to `1`. Negative offsets count from the end of the input. Out-of-range offsets or non-positive lengths return an empty result rather than an error.
 
 **Example:**
 
 ```go
-// String slicing
+// String slicing (by rune)
 result, _ := filter.Slice("hello", 1, 3)
 fmt.Println(result) // Outputs: "ell"
 
 result, _ = filter.Slice("hello", -3, 2)
 fmt.Println(result) // Outputs: "ll"
 
-// Array slicing
+result, _ = filter.Slice("こんにちは", 1, 2)
+fmt.Println(result) // Outputs: "んに"
+
+// Array slicing (by element)
 result, _ = filter.Slice([]any{1, 2, 3, 4}, 1, 2)
 fmt.Println(result) // Outputs: [2 3]
 ```

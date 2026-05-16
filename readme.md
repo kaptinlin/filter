@@ -7,6 +7,7 @@ The `filter` package offers a rich set of utilities for Go developers, focusing 
 
 - [Installing](#installing)
 - [Basic Usage](#basic-usage)
+- [Contract](#contract)
 - [String Functions](#string-functions)
 - [Array Functions](#array-functions)
 - [Date Functions](#date-functions)
@@ -42,13 +43,19 @@ func main() {
 }
 ```
 
+## Contract
+
+This package is a headless value-transformation library: no I/O, no global
+locale, no registry, and no application policy. Stable behavior is summarized
+in [CONTRACT.md](CONTRACT.md).
+
 ## String Functions
 
 [The string functions](docs/string.md) provide a range of functions to manipulate and query strings effectively.
 
 | Function | Description |
 |---|---|
-| [`Default`](docs/string.md#default) | Returns a default value if input is nil, false, or empty string. |
+| [`Default`](docs/string.md#default) | Returns a default value only for nil or false; empty strings are kept. |
 | [`Trim`](docs/string.md#trim) | Removes leading and trailing whitespace. |
 | [`TrimLeft`](docs/string.md#trimleft) | Removes leading whitespace (Liquid `lstrip`). |
 | [`TrimRight`](docs/string.md#trimright) | Removes trailing whitespace (Liquid `rstrip`). |
@@ -83,6 +90,8 @@ func main() {
 | [`URLDecode`](docs/string.md#urldecode) | Decodes a percent-encoded string. |
 | [`Base64Encode`](docs/string.md#base64encode) | Encodes a string to standard Base64. |
 | [`Base64Decode`](docs/string.md#base64decode) | Decodes a standard Base64 string. |
+| `Base64URLEncode` | Encodes a string to URL-safe Base64. |
+| `Base64URLDecode` | Decodes a URL-safe Base64 string. |
 
 
 ## Array Functions
@@ -92,17 +101,21 @@ func main() {
 | Function | Description |
 |---|---|
 | [`Unique`](docs/array.md#unique) | Removes duplicate elements, leaving only unique ones. |
+| [`UniqueBy`](docs/array.md#uniqueby) | Removes duplicate elements by a property. |
 | [`Join`](docs/array.md#join) | Concatenates slice elements into a single string. |
 | [`First`](docs/array.md#first) | Retrieves the first element of the slice. |
 | [`Last`](docs/array.md#last) | Returns the last element of the slice. |
 | [`Index`](docs/array.md#index) | Returns the element at a specified index. |
 | [`Random`](docs/array.md#random) | Selects a random element from the slice. |
+| [`RandomWithRand`](docs/array.md#random) | Selects a random element with an explicit `*rand.Rand`. |
 | [`Reverse`](docs/array.md#reverse) | Reverses the order of elements. |
 | [`Shuffle`](docs/array.md#shuffle) | Randomly rearranges the elements. |
-| [`Size`](docs/array.md#size) | Determines the size of a slice, array, or map. |
+| [`ShuffleWithRand`](docs/array.md#shuffle) | Shuffles with an explicit `*rand.Rand`. |
+| [`Size`](docs/array.md#size) | Determines the size of a slice, array, map, or string. |
 | [`Max`](docs/array.md#max) | Identifies the maximum value in a numerical slice. |
 | [`Min`](docs/array.md#min) | Finds the minimum value in a numerical slice. |
 | [`Sum`](docs/array.md#sum) | Calculates the sum of all elements. |
+| [`SumBy`](docs/array.md#sumby) | Calculates the sum of a numeric property. |
 | [`Average`](docs/array.md#average) | Computes the average value. |
 | [`Map`](docs/array.md#map) | Extracts values for a specified key from each element. |
 | [`Sort`](docs/array.md#sort) | Sorts in ascending order, optionally by key. |
@@ -132,7 +145,7 @@ func main() {
 | [`TimeAgo`](docs/date.md#timeago)                                    | Provides a human-readable string representing the time difference to the present.  |
 
 
-### Number Functions
+## Number Functions
 
 [Number functions](docs/number.md) allows for the formatting of numbers for presentation and readability.
 
@@ -141,7 +154,7 @@ func main() {
 | [`Number`](docs/number.md#number)                                | Formats any numeric value based on a specified format string.            |
 | [`Bytes`](docs/number.md#bytes)                                  | Converts a numeric value into a human-readable format representing bytes.|
 
-### Math Functions
+## Math Functions
 
 [Math functions](docs/math.md) include a variety of operations for numerical computation and manipulation.
 
@@ -159,22 +172,13 @@ func main() {
 | [`Divide`](docs/math.md#divide)                                  | Divides one number by another, with handling for division by zero.        |
 | [`Modulo`](docs/math.md#modulo)                                  | Calculates the remainder of division of one number by another.            |
 
-### Data Functions
+## Data Functions
 
 [Data functions](docs/data.md) provide utilities for extracting and manipulating data from complex nested structures including maps, slices, arrays, structs, pointers, and interfaces.
 
 | Function                                                       | Description                                                           |
 |----------------------------------------------------------------|-----------------------------------------------------------------------|
 | [`Extract`](docs/data.md#extract)                               | Retrieves a nested value from any supported data structure using a dot-separated key path. Supports maps, slices, arrays, structs, pointers, and complex nested combinations.|
-
-
-## Credits
-
-- [go-humanize](https://github.com/dustin/go-humanize)
-- [slug](https://github.com/gosimple/slug)
-- [carbon](https://github.com/dromara/carbon)
-- [inflection](https://github.com/jinzhu/inflection)
-- [jsonpointer](https://github.com/kaptinlin/jsonpointer)
 
 ## How to Contribute
 

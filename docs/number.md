@@ -1,12 +1,16 @@
 # Number Functions in the `filter` Package
 
-The `filter` package offers intuitive functions to format numerical values for readability and presentation. 
+The `filter` package offers intuitive functions to format numerical values
+for readability and presentation.
 
 ## Functions
 
 ### Number
 
-Formats any numeric value based on a specified format string. This function allows for custom formatting, including precision, thousands separator, and more, making it highly adaptable for various display needs.
+Formats any numeric value using a `#,###.##`-style format string. The number
+of characters after the `.` controls decimal precision; a `,` anywhere in
+the integer portion enables thousands separators. Without `.`, integers render
+without decimals and non-integers keep their natural precision.
 
 **Example:**
 
@@ -16,13 +20,21 @@ if err != nil {
     log.Fatal(err)
 }
 fmt.Println(formatted) // Outputs: "1,234,567.89"
-```
 
-**Note:** The actual implementation of `Number` in this document assumes the existence of a `humanize.FormatFloat` method that can handle custom format strings. As this method does not exist in the current version of `github.com/dustin/go-humanize`, the example serves illustrative purposes.
+// Integer with separators
+formatted, _ = filter.Number(1234567, "#,###.")
+fmt.Println(formatted) // Outputs: "1,234,567"
+
+// Plain integer, no separators
+formatted, _ = filter.Number(42, "#")
+fmt.Println(formatted) // Outputs: "42"
+```
 
 ### Bytes
 
-Converts a numeric value into a human-readable format representing bytes. This function simplifies the presentation of large byte sizes, automatically choosing the appropriate unit (KB, MB, GB, etc.) based on the input's magnitude.
+Converts a numeric value into a human-readable byte string using SI / decimal
+units (KB, MB, GB, …). Inputs must be non-negative whole-number byte counts;
+negative, fractional, non-finite, and overflowing inputs return an error.
 
 **Example:**
 
@@ -31,7 +43,8 @@ formatted, err := filter.Bytes(1024)
 if err != nil {
     log.Fatal(err)
 }
-fmt.Println(formatted) // Outputs: "1.0 kB"
+fmt.Println(formatted) // Outputs: "1.0 KB"
 ```
 
-The `Bytes` function uses the `humanize.Bytes` method from the `github.com/dustin/go-humanize` package, ensuring consistency and reliability in byte size representation.
+For binary (KiB / MiB) output, call `humanize.BinaryBytes` from
+`github.com/agentable/go-humanize` directly.
