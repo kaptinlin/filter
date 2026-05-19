@@ -146,25 +146,19 @@ func convertStringKey(step string, typ reflect.Type) (reflect.Value, error) {
 		if err != nil {
 			return reflect.Value{}, err
 		}
-		v := reflect.New(typ).Elem()
-		v.SetInt(n)
-		return v, nil
+		return reflect.ValueOf(n).Convert(typ), nil
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		n, err := strconv.ParseUint(step, 10, typ.Bits())
 		if err != nil {
 			return reflect.Value{}, err
 		}
-		v := reflect.New(typ).Elem()
-		v.SetUint(n)
-		return v, nil
+		return reflect.ValueOf(n).Convert(typ), nil
 	case reflect.Bool:
 		b, err := strconv.ParseBool(step)
 		if err != nil {
 			return reflect.Value{}, err
 		}
-		v := reflect.New(typ).Elem()
-		v.SetBool(b)
-		return v, nil
+		return reflect.ValueOf(b).Convert(typ), nil
 	default:
 		return reflect.Value{}, fmt.Errorf("unsupported map key type %s", typ)
 	}

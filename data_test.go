@@ -127,6 +127,36 @@ func TestExtractMap(t *testing.T) {
 }
 
 // TestExtractSlice tests the Extract function with slice/array data structures
+func TestExtractMapKeysByConvertedType(t *testing.T) {
+	t.Parallel()
+
+	type userID int
+	type enabled bool
+
+	tests := []struct {
+		name  string
+		input any
+		key   string
+		want  any
+	}{
+		{"int key", map[int]string{7: "seven"}, "7", "seven"},
+		{"uint key", map[uint8]string{3: "three"}, "3", "three"},
+		{"bool key", map[bool]string{true: "yes"}, "true", "yes"},
+		{"named int key", map[userID]string{42: "answer"}, "42", "answer"},
+		{"named bool key", map[enabled]string{enabled(false): "no"}, "false", "no"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := Extract(tt.input, tt.key)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestExtractSlice(t *testing.T) {
 	t.Parallel()
 
