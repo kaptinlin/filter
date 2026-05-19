@@ -282,6 +282,7 @@ func TestTitleize(t *testing.T) {
 		{"user/profile", "User Profile"},
 		{"admin:settings", "Admin Settings"},
 		{"user_id", "User ID"},
+		{"user_name/profile:id", "User Name Profile ID"},
 	}
 
 	for _, tt := range tests {
@@ -357,6 +358,7 @@ func TestCamelize(t *testing.T) {
 		{"UserAccounts", "userAccounts"},
 		{"résumé operation", "résuméOperation"},
 		{"happy 😊 day", "happyDay"},
+		{"user_name/profile:id", "userNameProfileID"},
 	}
 
 	for _, tt := range tests {
@@ -385,6 +387,7 @@ func TestDasherize(t *testing.T) {
 		{"Multiple Consecutive Spaces", "Multiple    spaces here", "multiple-spaces-here"},
 		{"Contains Plus Character", "Phrase with + character", "phrase-with-character"},
 		{"Includes Malformed UTF8", "String with bad utf8 \250", "string-with-bad-utf8"},
+		{"Mixed Default Boundaries", "Mixed_Path:Name/ID", "mixed-path-name-id"},
 	}
 
 	for _, tt := range tests {

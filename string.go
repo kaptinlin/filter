@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -16,9 +15,7 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
-// defaultSpaceRunes are the boundary characters used by case-conversion
-// helpers (Camelize/Dasherize/Titleize) when splitting input into parts.
-var defaultSpaceRunes = []rune{'_', ' ', ':', '-', '/'}
+const defaultSpaces = "_ :-/"
 
 // Trim strips leading and trailing whitespace from a string.
 func Trim(input string) string {
@@ -121,7 +118,7 @@ func Capitalize(input string) string {
 
 // Titleize capitalizes the start of each part of the string.
 func Titleize(input string) string {
-	parts := toParts(input, defaultSpaceRunes, true)
+	parts := toParts(input, defaultSpaces, true)
 	var b strings.Builder
 	b.Grow(len(input))
 
@@ -143,7 +140,7 @@ func Titleize(input string) string {
 
 // Camelize converts input to camelCase.
 func Camelize(input string) string {
-	parts := toParts(input, defaultSpaceRunes, true)
+	parts := toParts(input, defaultSpaces, true)
 	var b strings.Builder
 	b.Grow(len(input))
 
@@ -188,7 +185,7 @@ func Pascalize(input string) string {
 
 // Dasherize converts input to lowercase words joined by dashes.
 func Dasherize(input string) string {
-	parts := toParts(input, defaultSpaceRunes, true)
+	parts := toParts(input, defaultSpaces, true)
 	out := make([]string, 0, len(parts))
 	for _, part := range parts {
 		var b strings.Builder
@@ -479,26 +476,21 @@ func sliceBounds(n, offset int, length ...int) (start, end int, ok bool) {
 	return offset, min(offset+size, n), true
 }
 
-// appendPart and toParts implement the boundary-splitting logic shared by the
-// case-conversion helpers (Camelize/Dasherize/Titleize/Pascalize). It is not
-// exported; keep it small and local unless another file genuinely needs it.
-func appendPart(a []string, spaces []rune, ss ...string) []string {
-	for _, s := range ss {
-		s = strings.TrimSpace(s)
-		for _, x := range spaces {
-			s = strings.Trim(s, string(x))
-		}
-		if acronym, ok := baseAcronyms[strings.ToUpper(s)]; ok {
-			s = acronym
-		}
-		if s != "" {
-			a = append(a, s)
-		}
+func appendPart(parts []string, spaces, s string) []string {
+	s = strings.TrimSpace(s)
+	for _, r := range spaces {
+		s = strings.Trim(s, string(r))
 	}
-	return a
+	if acronym, ok := baseAcronyms[strings.ToUpper(s)]; ok {
+		s = acronym
+	}
+	if s != "" {
+		parts = append(parts, s)
+	}
+	return parts
 }
 
-func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
+func toParts(s, spaces string, splitOnUpperCase bool) []string {
 	parts := []string{}
 	s = strings.TrimSpace(s)
 	if len(s) == 0 {
@@ -514,7 +506,7 @@ func toParts(s string, spaces []rune, splitOnUpperCase bool) []string {
 		if !utf8.ValidRune(c) {
 			continue
 		}
-		if slices.Contains(spaces, c) || unicode.IsSpace(c) {
+		if strings.ContainsRune(spaces, c) || unicode.IsSpace(c) {
 			parts = appendPart(parts, spaces, x.String())
 			x.Reset()
 			x.WriteRune(c)
