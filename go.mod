@@ -15,6 +15,8 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-json-experiment/json v0.0.0-20260505212615-e40f80bf6836 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
+	github.com/kaptinlin/go-i18n v0.3.0 // indirect
+	github.com/kaptinlin/messageformat-go v0.4.18 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
