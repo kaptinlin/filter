@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	gotime "github.com/agentable/go-time"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,6 +91,29 @@ func TestDateAcceptsMultipleInputTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			got, err := Date(tt.input, "Y-m-d")
+			require.NoError(t, err)
+			require.Equal(t, "2024-03-30", got)
+		})
+	}
+}
+
+func TestDateAcceptsGoTimeTypes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input any
+	}{
+		{name: "instant", input: gotime.InstantFromTime(fixedDate)},
+		{name: "date time", input: gotime.DateTimeFromTime(fixedDate, gotime.UTC)},
+		{name: "date", input: gotime.DateFromTime(fixedDate)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := Date(tt.input, "Y-m-d")
 			require.NoError(t, err)
 			require.Equal(t, "2024-03-30", got)

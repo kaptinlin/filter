@@ -155,9 +155,9 @@ func toTime(input any) (time.Time, error) {
 		}
 		return *v, nil
 	case gotime.Instant:
-		return v.Time(), nil
+		return v.Std(), nil
 	case gotime.DateTime:
-		return v.ToInstant().Time(), nil
+		return v.Instant().Std(), nil
 	case gotime.Date:
 		return time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, time.UTC), nil
 	case int:
@@ -186,22 +186,21 @@ func splitFloat(f float64) (sec, nsec int64) {
 }
 
 func parseTimeString(s string) (time.Time, error) {
-	r := gotime.Parse(s, gotime.WithZone("UTC"))
-	switch r.Status {
-	case gotime.Resolved:
-		switch r.Kind {
-		case gotime.KindInstant:
-			return r.Instant().Time(), nil
-		case gotime.KindDateTime:
-			return r.DateTime().ToInstant().Time(), nil
-		case gotime.KindDate:
-			d := r.Date()
-			return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC), nil
-		case gotime.KindTime, gotime.KindDuration, gotime.KindInterval:
-		}
-	case gotime.Ambiguous, gotime.Invalid:
+	r := gotime.Parse(s, gotime.WithZone(gotime.UTC))
+	if r.Status != gotime.StatusResolved {
+		return time.Time{}, formatErr("toTime", invalidTimeError{s: s, cause: r.Error})
 	}
-	return time.Time{}, formatErr("toTime", invalidTimeError{s: s, cause: r.Error})
+
+	switch v := r.Value().(type) {
+	case gotime.Instant:
+		return v.Std(), nil
+	case gotime.DateTime:
+		return v.Instant().Std(), nil
+	case gotime.Date:
+		return v.Std(gotime.UTC), nil
+	default:
+		return time.Time{}, formatErr("toTime", invalidTimeError{s: s, cause: r.Error})
+	}
 }
 
 type invalidTimeError struct {
