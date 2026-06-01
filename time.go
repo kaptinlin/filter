@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -157,7 +158,7 @@ func toTime(input any) (time.Time, error) {
 	case gotime.Instant:
 		return v.Std(), nil
 	case gotime.DateTime:
-		return v.Instant().Std(), nil
+		return v.Std(), nil
 	case gotime.Date:
 		return time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, time.UTC), nil
 	case int:
@@ -167,16 +168,22 @@ func toTime(input any) (time.Time, error) {
 	case int32:
 		return time.Unix(int64(v), 0).UTC(), nil
 	case float64:
-		sec, frac := splitFloat(v)
-		return time.Unix(sec, frac).UTC(), nil
+		return timeFromUnixFloat(v)
 	case float32:
-		sec, frac := splitFloat(float64(v))
-		return time.Unix(sec, frac).UTC(), nil
+		return timeFromUnixFloat(float64(v))
 	case string:
 		return parseTimeString(v)
 	default:
 		return time.Time{}, invalidInput("toTime", nil)
 	}
+}
+
+func timeFromUnixFloat(f float64) (time.Time, error) {
+	if math.IsNaN(f) || math.IsInf(f, 0) {
+		return time.Time{}, invalidInput("toTime", nil)
+	}
+	sec, nsec := splitFloat(f)
+	return time.Unix(sec, nsec).UTC(), nil
 }
 
 func splitFloat(f float64) (sec, nsec int64) {
@@ -195,7 +202,7 @@ func parseTimeString(s string) (time.Time, error) {
 	case gotime.Instant:
 		return v.Std(), nil
 	case gotime.DateTime:
-		return v.Instant().Std(), nil
+		return v.Std(), nil
 	case gotime.Date:
 		return v.Std(gotime.UTC), nil
 	default:

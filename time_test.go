@@ -2,6 +2,7 @@ package filter
 
 import (
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -117,6 +118,41 @@ func TestDateAcceptsGoTimeTypes(t *testing.T) {
 			got, err := Date(tt.input, "Y-m-d")
 			require.NoError(t, err)
 			require.Equal(t, "2024-03-30", got)
+		})
+	}
+}
+
+func TestDatePreservesGoTimeDateTimeZone(t *testing.T) {
+	t.Parallel()
+
+	zone, err := gotime.LoadZone("Asia/Shanghai")
+	require.NoError(t, err)
+	input := gotime.DateTimeFromTime(time.Date(2024, time.March, 30, 23, 4, 5, 0, zone.Location()), zone)
+
+	got, err := Date(input, "Y-m-d H:i P e")
+	require.NoError(t, err)
+	require.Equal(t, "2024-03-30 23:04 +08:00 Asia/Shanghai", got)
+}
+
+func TestDateRejectsNonFiniteUnixSeconds(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input any
+	}{
+		{name: "nan float64", input: math.NaN()},
+		{name: "positive infinity", input: math.Inf(1)},
+		{name: "negative infinity", input: math.Inf(-1)},
+		{name: "nan float32", input: float32(math.NaN())},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := Date(tt.input, "Y-m-d")
+			require.ErrorIs(t, err, ErrInvalidInput)
 		})
 	}
 }
