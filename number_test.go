@@ -98,6 +98,33 @@ func TestBytesRejectsOverflow(t *testing.T) {
 	require.ErrorIs(t, err, ErrInvalidInput)
 }
 
+func TestNumberPreservesLargeIntegerPrecision(t *testing.T) {
+	t.Parallel()
+
+	got, err := Number(int64(9007199254740993), "#,###.")
+	require.NoError(t, err)
+	require.Equal(t, "9,007,199,254,740,993", got)
+}
+
+func TestNumberPreservesLargeIntegerStringPrecision(t *testing.T) {
+	t.Parallel()
+
+	got, err := Number("9007199254740993", "#,###.")
+	require.NoError(t, err)
+	require.Equal(t, "9,007,199,254,740,993", got)
+}
+
+func TestBytesAcceptsMaxInt64DecimalString(t *testing.T) {
+	t.Parallel()
+
+	want, err := Bytes(int64(math.MaxInt64))
+	require.NoError(t, err)
+
+	got, err := Bytes("9223372036854775807.0")
+	require.NoError(t, err)
+	require.Equal(t, want, got)
+}
+
 func BenchmarkNumber(b *testing.B) {
 	for b.Loop() {
 		_, _ = Number(1234567.89, "#,###.##")

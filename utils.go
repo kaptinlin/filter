@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/big"
 	"strconv"
 	"strings"
 )
@@ -100,11 +101,21 @@ func stringToInt64Exact(op, s string) (int64, error) {
 		return 0, formatErr(op, err)
 	}
 
-	v, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		return 0, formatErr(op, err)
+	return decimalStringToInt64Exact(op, s)
+}
+
+func decimalStringToInt64Exact(op, s string) (int64, error) {
+	v, ok := new(big.Rat).SetString(s)
+	if !ok {
+		return 0, formatErr(op, fmt.Errorf("invalid number %q", s))
 	}
-	return floatToInt64Exact(op, v)
+	if !v.IsInt() {
+		return 0, invalidInput(op, fmt.Errorf("expected integer, got %s", s))
+	}
+	if !v.Num().IsInt64() {
+		return 0, invalidInput(op, fmt.Errorf("value %s overflows int64", s))
+	}
+	return v.Num().Int64(), nil
 }
 
 func floatToInt64Exact(op string, v float64) (int64, error) {

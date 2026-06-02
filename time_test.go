@@ -236,6 +236,43 @@ func TestDateErrorIsKindFormat(t *testing.T) {
 	require.Equal(t, KindFormat, fe.Kind)
 }
 
+func TestDateStringPreservesExplicitOffset(t *testing.T) {
+	t.Parallel()
+
+	got, err := Date("2024-03-31T00:30:00+08:00", "Y-m-d H:i P e")
+	require.NoError(t, err)
+	require.Equal(t, "2024-03-31 00:30 +08:00 +08:00", got)
+}
+
+func TestDateRejectsZeroGoTimeDate(t *testing.T) {
+	t.Parallel()
+
+	_, err := Date(gotime.Date{}, "Y-m-d")
+	require.ErrorIs(t, err, ErrInvalidInput)
+}
+
+func TestDateRejectsOutOfRangeUnixFloatSeconds(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input any
+	}{
+		{name: "max float64", input: math.MaxFloat64},
+		{name: "negative max float64", input: -math.MaxFloat64},
+		{name: "max float32", input: float32(math.MaxFloat32)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := Date(tt.input, "Y")
+			require.ErrorIs(t, err, ErrInvalidInput)
+		})
+	}
+}
+
 func FuzzDateFormat(f *testing.F) {
 	f.Add("Y-m-d H:i:s")
 	f.Add(`\Y\m\d`)

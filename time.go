@@ -160,7 +160,10 @@ func toTime(input any) (time.Time, error) {
 	case gotime.DateTime:
 		return v.Std(), nil
 	case gotime.Date:
-		return time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, time.UTC), nil
+		if v.IsZero() {
+			return time.Time{}, invalidInput("toTime", nil)
+		}
+		return v.Std(gotime.UTC), nil
 	case int:
 		return time.Unix(int64(v), 0).UTC(), nil
 	case int64:
@@ -182,6 +185,9 @@ func timeFromUnixFloat(f float64) (time.Time, error) {
 	if math.IsNaN(f) || math.IsInf(f, 0) {
 		return time.Time{}, invalidInput("toTime", nil)
 	}
+	if f >= float64(math.MaxInt64) || f < float64(math.MinInt64) {
+		return time.Time{}, invalidInput("toTime", nil)
+	}
 	sec, nsec := splitFloat(f)
 	return time.Unix(sec, nsec).UTC(), nil
 }
@@ -193,7 +199,7 @@ func splitFloat(f float64) (sec, nsec int64) {
 }
 
 func parseTimeString(s string) (time.Time, error) {
-	r := gotime.Parse(s, gotime.WithZone(gotime.UTC))
+	r := gotime.Parse(s)
 	if r.Status != gotime.StatusResolved {
 		return time.Time{}, formatErr("toTime", invalidTimeError{s: s, cause: r.Error})
 	}

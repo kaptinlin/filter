@@ -29,6 +29,10 @@ import (
 // Returns *Error{Kind: KindInvalidInput} for non-numeric input and
 // *Error{Kind: KindFormat} for unparseable numeric strings.
 func Number(input any, format string) (string, error) {
+	if s, ok := integerInputString(input); ok {
+		return formatIntegerString(s, format), nil
+	}
+
 	v, err := toFloat64(input)
 	if err != nil {
 		return "", err
@@ -70,14 +74,7 @@ func formatDecimalBytes(v int64) string {
 // other than `,` and `.` are treated as placeholders — only their count after
 // `.` matters (precision). Inspired by humanize.FormatFloat.
 func formatNumber(v float64, format string) string {
-	precision := -1
-	useComma := false
-	if i := strings.LastIndex(format, "."); i >= 0 {
-		precision = len(format) - i - 1
-		useComma = strings.Contains(format[:i], ",")
-	} else {
-		useComma = strings.Contains(format, ",")
-	}
+	precision, useComma := parseNumberFormat(format)
 
 	if precision < 0 {
 		// No decimal mark in format; render as natural number.
@@ -87,6 +84,78 @@ func formatNumber(v float64, format string) string {
 		return formatFloat(v, -1, useComma)
 	}
 	return formatFloat(v, precision, useComma)
+}
+
+func integerInputString(input any) (string, bool) {
+	switch v := input.(type) {
+	case int:
+		return strconv.FormatInt(int64(v), 10), true
+	case int8:
+		return strconv.FormatInt(int64(v), 10), true
+	case int16:
+		return strconv.FormatInt(int64(v), 10), true
+	case int32:
+		return strconv.FormatInt(int64(v), 10), true
+	case int64:
+		return strconv.FormatInt(v, 10), true
+	case uint:
+		return strconv.FormatUint(uint64(v), 10), true
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10), true
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10), true
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10), true
+	case uint64:
+		return strconv.FormatUint(v, 10), true
+	case string:
+		return integerString(v)
+	default:
+		return "", false
+	}
+}
+
+func integerString(s string) (string, bool) {
+	if strings.ContainsAny(s, ".eE") {
+		return "", false
+	}
+	if strings.HasPrefix(s, "-") {
+		v, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return "", false
+		}
+		return strconv.FormatInt(v, 10), true
+	}
+
+	v, err := strconv.ParseUint(strings.TrimPrefix(s, "+"), 10, 64)
+	if err != nil {
+		return "", false
+	}
+	return strconv.FormatUint(v, 10), true
+}
+
+func parseNumberFormat(format string) (precision int, useComma bool) {
+	precision = -1
+	if i := strings.LastIndex(format, "."); i >= 0 {
+		return len(format) - i - 1, strings.Contains(format[:i], ",")
+	}
+	return precision, strings.Contains(format, ",")
+}
+
+func formatIntegerString(s, format string) string {
+	precision, useComma := parseNumberFormat(format)
+	sign := ""
+	if strings.HasPrefix(s, "-") {
+		sign = "-"
+		s = s[1:]
+	}
+	if useComma {
+		s = groupIntegerString(s)
+	}
+	if precision > 0 {
+		return sign + s + "." + strings.Repeat("0", precision)
+	}
+	return sign + s
 }
 
 func formatFloat(v float64, precision int, useComma bool) string {
