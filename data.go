@@ -123,7 +123,7 @@ func mapKeyValue(v reflect.Value, step string) (reflect.Value, bool) {
 		if v.MapIndex(key).IsValid() {
 			return key, true
 		}
-		for _, existing := range v.MapKeys() {
+		for existing := range v.Seq2() {
 			if fmt.Sprint(existing.Interface()) == step {
 				return existing, true
 			}
@@ -185,8 +185,7 @@ func extractStructStep(v reflect.Value, step, path string) (any, error) {
 
 func structFieldByPathName(v reflect.Value, step string) (reflect.Value, bool) {
 	t := v.Type()
-	for i := range t.NumField() {
-		sf := t.Field(i)
+	for sf := range t.Fields() {
 		if !sf.IsExported() {
 			continue
 		}
@@ -195,15 +194,14 @@ func structFieldByPathName(v reflect.Value, step string) (reflect.Value, bool) {
 			continue
 		}
 		if name == step || sf.Name == step {
-			return v.Field(i), true
+			return v.FieldByIndex(sf.Index), true
 		}
 	}
-	for i := range t.NumField() {
-		sf := t.Field(i)
+	for sf := range t.Fields() {
 		if !sf.Anonymous || !sf.IsExported() {
 			continue
 		}
-		field := v.Field(i)
+		field := v.FieldByIndex(sf.Index)
 		field, err := dereferenceValue(field, step)
 		if err != nil || field.Kind() != reflect.Struct {
 			continue

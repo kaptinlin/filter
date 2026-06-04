@@ -142,6 +142,7 @@ func TestExtractMapKeysByConvertedType(t *testing.T) {
 		{"int key", map[int]string{7: "seven"}, "7", "seven"},
 		{"uint key", map[uint8]string{3: "three"}, "3", "three"},
 		{"bool key", map[bool]string{true: "yes"}, "true", "yes"},
+		{"interface int key", map[any]string{7: "seven"}, "7", "seven"},
 		{"named int key", map[userID]string{42: "answer"}, "42", "answer"},
 		{"named bool key", map[enabled]string{enabled(false): "no"}, "false", "no"},
 	}
