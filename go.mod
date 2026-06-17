@@ -1,6 +1,6 @@
 module github.com/kaptinlin/filter
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/agentable/go-humanize v0.1.2
@@ -16,6 +16,6 @@ require (
 	github.com/go-json-experiment/json v0.0.0-20260601182631-00ed12fed2a6 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
