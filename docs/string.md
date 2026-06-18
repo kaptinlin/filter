@@ -43,7 +43,7 @@ fmt.Println(result) // Outputs: "hello world"
 
 ### TrimLeft
 
-Removes leading whitespace from a string. Equivalent to Liquid's `lstrip`.
+Removes leading whitespace from a string.
 
 **Example:**
 
@@ -54,7 +54,7 @@ fmt.Println(result) // Outputs: "hello  "
 
 ### TrimRight
 
-Removes trailing whitespace from a string. Equivalent to Liquid's `rstrip`.
+Removes trailing whitespace from a string.
 
 **Example:**
 
@@ -211,7 +211,7 @@ fmt.Println(result) // Outputs: "Hello World"
 
 ### Capitalize
 
-Capitalizes the first letter and lowercases the rest. Follows the Liquid `capitalize` behavior.
+Capitalizes the first letter and lowercases the rest.
 
 **Example:**
 

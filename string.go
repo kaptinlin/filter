@@ -22,12 +22,12 @@ func Trim(input string) string {
 	return strings.TrimSpace(input)
 }
 
-// TrimLeft removes leading whitespace from input. Equivalent to Liquid's lstrip.
+// TrimLeft removes leading whitespace from input.
 func TrimLeft(input string) string {
 	return strings.TrimLeftFunc(input, unicode.IsSpace)
 }
 
-// TrimRight removes trailing whitespace from input. Equivalent to Liquid's rstrip.
+// TrimRight removes trailing whitespace from input.
 func TrimRight(input string) string {
 	return strings.TrimRightFunc(input, unicode.IsSpace)
 }
@@ -106,7 +106,7 @@ func Lower(input string) string {
 }
 
 // Capitalize returns input with the first rune title-cased and the rest lowercased.
-// Matches Liquid's capitalize behavior.
+// It uppercases the first rune and lowercases the rest.
 func Capitalize(input string) string {
 	if input == "" {
 		return ""
@@ -344,7 +344,7 @@ var (
 //
 // This is not a sanitizer and not a security boundary. For untrusted HTML,
 // use a real parser-based sanitizer (e.g. bluemonday). Provided here because
-// it is the de-facto Liquid `strip_html` filter behavior.
+// it preserves the long-standing behavior of this package's StripHTML helper.
 func StripHTML(input string) string {
 	s := htmlScriptRe.ReplaceAllString(input, "")
 	s = htmlStyleRe.ReplaceAllString(s, "")
@@ -409,10 +409,7 @@ func Base64URLDecode(input string) (string, error) {
 // collections are treated as truthy — the same definition used by Where /
 // Reject / Has.
 func Default(input, defaultValue any) any {
-	if input == nil {
-		return defaultValue
-	}
-	if b, ok := input.(bool); ok && !b {
+	if isFalsy(input) {
 		return defaultValue
 	}
 	return input

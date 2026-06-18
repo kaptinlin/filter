@@ -45,10 +45,18 @@ filter/
 ├── math.go            # Mathematical operations (abs, round, arithmetic)
 ├── data.go            # Nested data extraction with dot notation
 ├── rand.go            # SeededRand for deterministic RandomWithRand/ShuffleWithRand tests
+├── truth.go           # Shared nil/false-only truthiness semantics
+├── compare.go         # Shared numeric-first equality and ordering semantics
 ├── utils.go           # Type conversion utilities (toFloat64, toSlice)
 ├── errors.go          # *Error{Kind, Op, Path, Cause} model with four Kind sentinels
 └── acronyms.go        # Acronym handling for case conversions
 ```
+
+## SPECS Index
+
+- [`SPECS/00-runtime-contract.md`](SPECS/00-runtime-contract.md) - Durable
+  runtime contract, value semantics, consumer boundary, forbidden scope, and
+  acceptance criteria.
 
 ## Key Types and Interfaces
 

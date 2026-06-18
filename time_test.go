@@ -65,6 +65,61 @@ func TestDateSubsecondTokens(t *testing.T) {
 	require.Equal(t, "123456 123", got)
 }
 
+func TestDateOrdinalSuffixToken(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		day  int
+		want string
+	}{
+		{"first", 1, "1st"},
+		{"second", 2, "2nd"},
+		{"third", 3, "3rd"},
+		{"fourth", 4, "4th"},
+		{"eleventh", 11, "11th"},
+		{"twelfth", 12, "12th"},
+		{"thirteenth", 13, "13th"},
+		{"twenty first", 21, "21st"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			value := time.Date(2024, time.March, tt.day, 15, 4, 5, 0, time.UTC)
+			got, err := Date(value, "jS")
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestDateEscapedAndUnknownLiterals(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		format string
+		want   string
+	}{
+		{"escaped token becomes literal", `Y\Y`, "2024Y"},
+		{"unknown punctuation passes through", "Y-?-d", "2024-?-30"},
+		{"unknown letter passes through", "Y Q d", "2024 Q 30"},
+		{"trailing backslash passes through", `Y\`, `2024\`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := Date(fixedDate, tt.format)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestDateTimezoneTokens(t *testing.T) {
 	t.Parallel()
 
@@ -219,13 +274,6 @@ func TestSystemClockReturnsUTC(t *testing.T) {
 	t.Parallel()
 	now := SystemClock{}.Now()
 	require.Equal(t, time.UTC, now.Location())
-}
-
-func TestDateUnknownTokenPassesThrough(t *testing.T) {
-	t.Parallel()
-	got, err := Date(fixedDate, "Y-?-d")
-	require.NoError(t, err)
-	require.Equal(t, "2024-?-30", got)
 }
 
 func TestDateErrorIsKindFormat(t *testing.T) {

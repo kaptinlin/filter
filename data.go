@@ -25,61 +25,123 @@ func Extract(input any, key string) (any, error) {
 		return nil, notFound("Extract", "", nil)
 	}
 
-	steps, err := parsePath(key)
+	path, err := parsePath(key)
 	if err != nil {
-		return nil, invalidInput("Extract", err)
+		return nil, invalidInputAt("Extract", key, err)
 	}
 
-	current := input
-	for _, step := range steps {
-		if step == "" {
-			return nil, notFound("Extract", key, fmt.Errorf("empty path step"))
-		}
-		next, err := extractStep(current, step, key)
-		if err != nil {
-			return nil, err
-		}
-		current = next
+	result := lookupPath(input, path)
+	if result.found() {
+		return result.value, nil
 	}
-	return current, nil
+	return nil, result.err("Extract", path)
 }
 
-func parsePath(path string) ([]string, error) {
-	steps := make([]string, 0, strings.Count(path, ".")+1)
-	var b strings.Builder
-	b.Grow(len(path))
+type path struct {
+	raw   string
+	steps []string
+}
 
-	for i := 0; i < len(path); i++ {
-		switch path[i] {
+func parsePath(raw string) (path, error) {
+	steps := make([]string, 0, strings.Count(raw, ".")+1)
+	var b strings.Builder
+	b.Grow(len(raw))
+
+	for i := 0; i < len(raw); i++ {
+		switch raw[i] {
 		case '.':
 			steps = append(steps, b.String())
 			b.Reset()
 		case '\\':
-			if i+1 >= len(path) {
-				return nil, fmt.Errorf("dangling escape in path %q", path)
+			if i+1 >= len(raw) {
+				return path{}, fmt.Errorf("dangling escape in path %q", raw)
 			}
-			next := path[i+1]
+			next := raw[i+1]
 			if next != '.' && next != '\\' {
-				return nil, fmt.Errorf("unsupported escape \\%c in path %q", next, path)
+				return path{}, fmt.Errorf("unsupported escape \\%c in path %q", next, raw)
 			}
 			b.WriteByte(next)
 			i++
 		default:
-			b.WriteByte(path[i])
+			b.WriteByte(raw[i])
 		}
 	}
 	steps = append(steps, b.String())
-	return steps, nil
+	return path{raw: raw, steps: steps}, nil
 }
 
-func extractStep(input any, step, path string) (any, error) {
+type lookupState uint8
+
+const (
+	foundState lookupState = iota + 1
+	missingState
+	nullState
+	invalidState
+)
+
+type lookupResult struct {
+	state lookupState
+	value any
+	cause error
+}
+
+func foundLookup(value any) lookupResult {
+	return lookupResult{state: foundState, value: value}
+}
+
+func missingLookup(cause error) lookupResult {
+	return lookupResult{state: missingState, cause: cause}
+}
+
+func nullLookup(cause error) lookupResult {
+	return lookupResult{state: nullState, cause: cause}
+}
+
+func invalidLookup(cause error) lookupResult {
+	return lookupResult{state: invalidState, cause: cause}
+}
+
+func (r lookupResult) found() bool {
+	return r.state == foundState
+}
+
+func (r lookupResult) err(op string, path path) error {
+	switch r.state {
+	case missingState:
+		return notFound(op, path.raw, r.cause)
+	case nullState, invalidState:
+		return invalidInputAt(op, path.raw, r.cause)
+	default:
+		return invalidInputAt(op, path.raw, fmt.Errorf("unknown lookup state %d", r.state))
+	}
+}
+
+func lookupPath(input any, path path) lookupResult {
+	current := input
+	for i, step := range path.steps {
+		if step == "" {
+			return missingLookup(fmt.Errorf("empty path step"))
+		}
+		result := lookupStep(current, step, path.raw)
+		if !result.found() {
+			return result
+		}
+		current = result.value
+		if current == nil && i+1 < len(path.steps) {
+			return nullLookup(fmt.Errorf("nil value at %q", path.raw))
+		}
+	}
+	return foundLookup(current)
+}
+
+func lookupStep(input any, step, path string) lookupResult {
 	v := reflect.ValueOf(input)
 	if !v.IsValid() {
-		return nil, invalidInput("Extract", fmt.Errorf("nil value at %q", path))
+		return nullLookup(fmt.Errorf("nil value at %q", path))
 	}
-	v, err := dereferenceValue(v, path)
-	if err != nil {
-		return nil, err
+	v, result := dereferenceValue(v, path)
+	if !result.found() {
+		return result
 	}
 
 	switch v.Kind() {
@@ -90,30 +152,30 @@ func extractStep(input any, step, path string) (any, error) {
 	case reflect.Struct:
 		return extractStructStep(v, step, path)
 	default:
-		return nil, invalidInput("Extract", fmt.Errorf("cannot extract %q from %s", step, v.Kind()))
+		return invalidLookup(fmt.Errorf("cannot extract %q from %s", step, v.Kind()))
 	}
 }
 
-func dereferenceValue(v reflect.Value, path string) (reflect.Value, error) {
+func dereferenceValue(v reflect.Value, path string) (reflect.Value, lookupResult) {
 	for v.Kind() == reflect.Interface || v.Kind() == reflect.Pointer {
 		if v.IsNil() {
-			return reflect.Value{}, invalidInput("Extract", fmt.Errorf("nil pointer at %q", path))
+			return reflect.Value{}, nullLookup(fmt.Errorf("nil pointer at %q", path))
 		}
 		v = v.Elem()
 	}
-	return v, nil
+	return v, foundLookup(nil)
 }
 
-func extractMapStep(v reflect.Value, step, path string) (any, error) {
+func extractMapStep(v reflect.Value, step, path string) lookupResult {
 	key, ok := mapKeyValue(v, step)
 	if !ok {
-		return nil, invalidInput("Extract", fmt.Errorf("cannot convert %q to %s", step, v.Type().Key()))
+		return invalidLookup(fmt.Errorf("cannot convert %q to %s", step, v.Type().Key()))
 	}
 	value := v.MapIndex(key)
 	if !value.IsValid() {
-		return nil, notFound("Extract", path, fmt.Errorf("map key %q not found", step))
+		return missingLookup(fmt.Errorf("map key %q not found", step))
 	}
-	return value.Interface(), nil
+	return foundLookup(value.Interface())
 }
 
 func mapKeyValue(v reflect.Value, step string) (reflect.Value, bool) {
@@ -164,26 +226,26 @@ func convertStringKey(step string, typ reflect.Type) (reflect.Value, error) {
 	}
 }
 
-func extractIndexStep(v reflect.Value, step, path string) (any, error) {
+func extractIndexStep(v reflect.Value, step, path string) lookupResult {
 	index, err := strconv.Atoi(step)
 	if err != nil || index < 0 {
-		return nil, invalidInput("Extract", fmt.Errorf("invalid index %q", step))
+		return invalidLookup(fmt.Errorf("invalid index %q", step))
 	}
 	if index >= v.Len() {
-		return nil, notFound("Extract", path, fmt.Errorf("index %d out of range", index))
+		return missingLookup(fmt.Errorf("index %d out of range", index))
 	}
-	return v.Index(index).Interface(), nil
+	return foundLookup(v.Index(index).Interface())
 }
 
-func extractStructStep(v reflect.Value, step, path string) (any, error) {
-	field, ok := structFieldByPathName(v, step)
+func extractStructStep(v reflect.Value, step, path string) lookupResult {
+	field, ok := structFieldByPathName(v, step, path)
 	if !ok {
-		return nil, notFound("Extract", path, fmt.Errorf("field %q not found", step))
+		return missingLookup(fmt.Errorf("field %q not found", step))
 	}
-	return field.Interface(), nil
+	return foundLookup(field.Interface())
 }
 
-func structFieldByPathName(v reflect.Value, step string) (reflect.Value, bool) {
+func structFieldByPathName(v reflect.Value, step, path string) (reflect.Value, bool) {
 	t := v.Type()
 	for sf := range t.Fields() {
 		if !sf.IsExported() {
@@ -202,11 +264,11 @@ func structFieldByPathName(v reflect.Value, step string) (reflect.Value, bool) {
 			continue
 		}
 		field := v.FieldByIndex(sf.Index)
-		field, err := dereferenceValue(field, step)
-		if err != nil || field.Kind() != reflect.Struct {
+		field, result := dereferenceValue(field, path)
+		if !result.found() || field.Kind() != reflect.Struct {
 			continue
 		}
-		if found, ok := structFieldByPathName(field, step); ok {
+		if found, ok := structFieldByPathName(field, step, path); ok {
 			return found, true
 		}
 	}

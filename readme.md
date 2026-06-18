@@ -47,7 +47,7 @@ func main() {
 
 This package is a headless value-transformation library: no I/O, no global
 locale, no registry, and no application policy. Stable behavior is summarized
-in [CONTRACT.md](CONTRACT.md).
+in [SPECS/00-runtime-contract.md](SPECS/00-runtime-contract.md).
 
 ## String Functions
 
@@ -57,8 +57,8 @@ in [CONTRACT.md](CONTRACT.md).
 |---|---|
 | [`Default`](docs/string.md#default) | Returns a default value only for nil or false; empty strings are kept. |
 | [`Trim`](docs/string.md#trim) | Removes leading and trailing whitespace. |
-| [`TrimLeft`](docs/string.md#trimleft) | Removes leading whitespace (Liquid `lstrip`). |
-| [`TrimRight`](docs/string.md#trimright) | Removes trailing whitespace (Liquid `rstrip`). |
+| [`TrimLeft`](docs/string.md#trimleft) | Removes leading whitespace. |
+| [`TrimRight`](docs/string.md#trimright) | Removes trailing whitespace. |
 | [`Split`](docs/string.md#split) | Divides a string into a slice based on a delimiter. |
 | [`Replace`](docs/string.md#replace) | Substitutes all occurrences of a substring. |
 | [`ReplaceFirst`](docs/string.md#replacefirst) | Replaces the first occurrence of a substring. |

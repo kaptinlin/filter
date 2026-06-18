@@ -37,6 +37,38 @@ func TestNumber(t *testing.T) {
 	}
 }
 
+func TestNumberFormatGrammar(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		input  any
+		format string
+		want   string
+	}{
+		{"empty format keeps natural float precision", 1234.5, "", "1234.5"},
+		{"empty format renders whole float without decimals", 1234.0, "", "1234"},
+		{"comma before no decimal groups natural float", 1234.5, "#,###", "1,234.5"},
+		{"placeholder characters only count after decimal", 12.3, "0.000", "12.300"},
+		{"explicit decimal with no places rounds to integer", 12.9, "#.", "13"},
+		{"positive integer string normalizes sign", "+1234", "#,###", "1,234"},
+		{"negative integer string keeps sign and groups digits", "-1234", "#,###", "-1,234"},
+		{"NaN renders as token", math.NaN(), "#,###.##", "NaN"},
+		{"positive infinity renders as token", math.Inf(1), "#,###.##", "+Inf"},
+		{"negative infinity renders as token", math.Inf(-1), "#,###.##", "-Inf"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := Number(tt.input, tt.format)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestNumberRejectsNonNumeric(t *testing.T) {
 	t.Parallel()
 	_, err := Number(struct{}{}, "#,###.##")
@@ -62,6 +94,39 @@ func TestBytes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := Bytes(tt.input)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestBytesExactIntegerContract(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		input   any
+		want    string
+		wantErr error
+	}{
+		{"whole float", 2048.0, "2.0 KB", nil},
+		{"decimal integer string", "2048.0", "2.0 KB", nil},
+		{"scientific integer string", "2e3", "2.0 KB", nil},
+		{"fractional float", 1.5, "", ErrInvalidInput},
+		{"fractional decimal string", "1.5", "", ErrInvalidInput},
+		{"positive infinity", math.Inf(1), "", ErrInvalidInput},
+		{"overflowing decimal string", "9223372036854775808", "", ErrInvalidInput},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := Bytes(tt.input)
+			if tt.wantErr != nil {
+				require.ErrorIs(t, err, tt.wantErr)
+				return
+			}
 			require.NoError(t, err)
 			require.Equal(t, tt.want, got)
 		})

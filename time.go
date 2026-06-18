@@ -30,7 +30,7 @@ type FixedClock struct{ T time.Time }
 // Now satisfies Clock.
 func (c FixedClock) Now() time.Time { return c.T }
 
-// Date formats input using PHP/carbon-style format tokens.
+// Date formats input using this package's date format tokens.
 // An empty format returns the canonical "2006-01-02 15:04:05" representation.
 //
 // Supported tokens:
@@ -228,7 +228,7 @@ func (e invalidTimeError) Error() string {
 	return "cannot parse time " + strconv.Quote(e.s)
 }
 
-// formatTime renders t with PHP/carbon-style format tokens. Unknown letters
+// formatTime renders t with this package's date format tokens. Unknown letters
 // pass through as literals; backslash escapes the next byte.
 func formatTime(t time.Time, format string) string {
 	var b strings.Builder

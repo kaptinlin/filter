@@ -108,6 +108,11 @@ func invalidInput(op string, cause error) *Error {
 	return &Error{Kind: KindInvalidInput, Op: op, Cause: cause}
 }
 
+// invalidInputAt builds an InvalidInput error rooted at op for the given path.
+func invalidInputAt(op, path string, cause error) *Error {
+	return &Error{Kind: KindInvalidInput, Op: op, Path: path, Cause: cause}
+}
+
 // notFound builds a NotFound error rooted at op for the given path.
 func notFound(op, path string, cause error) *Error {
 	return &Error{Kind: KindNotFound, Op: op, Path: path, Cause: cause}

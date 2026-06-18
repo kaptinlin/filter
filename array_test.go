@@ -118,6 +118,22 @@ func TestUniqueByNestedKey(t *testing.T) {
 	}
 }
 
+func TestUniqueByCrossTypeNumericKey(t *testing.T) {
+	t.Parallel()
+
+	oneInt := map[string]any{"id": 1, "name": "int"}
+	oneString := map[string]any{"id": "1", "name": "string"}
+	two := map[string]any{"id": 2, "name": "two"}
+	input := []any{oneInt, oneString, two}
+
+	got, err := UniqueBy(input, "id")
+	require.NoError(t, err)
+	want := []any{oneInt, two}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("UniqueBy() mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestUniqueByNonComparableKey(t *testing.T) {
 	t.Parallel()
 
@@ -806,6 +822,28 @@ func TestSum(t *testing.T) {
 	}
 }
 
+func TestNumericAggregatesCoerceStrings(t *testing.T) {
+	t.Parallel()
+
+	input := []any{"1.5", 2, int64(3)}
+
+	maximum, err := Max(input)
+	require.NoError(t, err)
+	require.Equal(t, 3.0, maximum)
+
+	minimum, err := Min(input)
+	require.NoError(t, err)
+	require.Equal(t, 1.5, minimum)
+
+	sum, err := Sum(input)
+	require.NoError(t, err)
+	require.Equal(t, 6.5, sum)
+
+	average, err := Average(input)
+	require.NoError(t, err)
+	require.InEpsilon(t, 6.5/3, average, 1e-9)
+}
+
 func TestSumBy(t *testing.T) {
 	t.Parallel()
 
@@ -840,6 +878,131 @@ func TestSumByNonNumeric(t *testing.T) {
 
 	_, err := SumBy([]any{map[string]any{"price": "free"}}, "price")
 	require.ErrorIs(t, err, ErrFormat)
+}
+
+func TestCollectionMissingPolicies(t *testing.T) {
+	t.Parallel()
+
+	active := map[string]any{"name": "Ada", "active": true, "rank": 2, "price": 10}
+	inactive := map[string]any{"name": "Bob", "active": false, "rank": 1, "price": 20}
+	missing := map[string]any{"title": "Unknown"}
+	records := []map[string]any{active, inactive, missing}
+
+	t.Run("map substitutes nil", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Map(records, "name")
+		require.NoError(t, err)
+		if diff := cmp.Diff([]any{"Ada", "Bob", nil}, got); diff != "" {
+			t.Fatalf("Map() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("sort treats missing as nil", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Sort(records, "rank")
+		require.NoError(t, err)
+		want := []any{missing, inactive, active}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Fatalf("Sort() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("sort natural treats missing as nil", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := SortNatural(records, "name")
+		require.NoError(t, err)
+		want := []any{missing, active, inactive}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Fatalf("SortNatural() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("compact skips missing", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Compact(records, "name")
+		require.NoError(t, err)
+		want := []any{active, inactive}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Fatalf("Compact() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("where treats missing as no match", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Where(records, "active")
+		require.NoError(t, err)
+		want := []any{active}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Fatalf("Where() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("reject keeps missing because it did not match", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Reject(records, "active")
+		require.NoError(t, err)
+		want := []any{inactive, missing}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Fatalf("Reject() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("find skips missing and reports not found", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Find(records, "name", "Ada")
+		require.NoError(t, err)
+		if diff := cmp.Diff(active, got); diff != "" {
+			t.Fatalf("Find() mismatch (-want +got):\n%s", diff)
+		}
+
+		_, err = Find(records, "missing", "value")
+		require.ErrorIs(t, err, ErrNotFound)
+	})
+
+	t.Run("find index skips missing", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := FindIndex(records, "name", "Bob")
+		require.NoError(t, err)
+		require.Equal(t, 1, got)
+
+		got, err = FindIndex(records, "missing", "value")
+		require.NoError(t, err)
+		require.Equal(t, -1, got)
+	})
+
+	t.Run("has treats missing as no match", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Has(records, "name", "Bob")
+		require.NoError(t, err)
+		require.True(t, got)
+
+		got, err = Has(records, "missing")
+		require.NoError(t, err)
+		require.False(t, got)
+	})
+
+	t.Run("unique by fails on missing", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := UniqueBy(records, "name")
+		require.ErrorIs(t, err, ErrNotFound)
+	})
+
+	t.Run("sum by fails on missing", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := SumBy(records, "price")
+		require.ErrorIs(t, err, ErrNotFound)
+	})
 }
 
 func TestAverage(t *testing.T) {
@@ -1107,6 +1270,11 @@ func TestSort(t *testing.T) {
 			want:  []any{1.0, 2.0, 3.0},
 		},
 		{
+			name:  "Sort cross-type numeric values",
+			input: []any{"10", 2, int64(1), "3.5"},
+			want:  []any{int64(1), 2, "3.5", "10"},
+		},
+		{
 			name: "Sort by key",
 			input: []any{
 				map[string]any{"name": "Charlie", "age": 30},
@@ -1185,6 +1353,11 @@ func TestSortNatural(t *testing.T) {
 			name:  "All same case",
 			input: []any{"c", "a", "b"},
 			want:  []any{"a", "b", "c"},
+		},
+		{
+			name:  "Numeric strings sort by value",
+			input: []any{"10", "2", "1"},
+			want:  []any{"1", "2", "10"},
 		},
 		{
 			name: "Sort by key case insensitive",
@@ -1421,6 +1594,91 @@ func TestWhereWithNonComparableValue(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("Where() mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func TestCollectionNumericEquality(t *testing.T) {
+	t.Parallel()
+
+	oneInt := map[string]any{"id": 1, "name": "int"}
+	oneString := map[string]any{"id": "1", "name": "string"}
+	two := map[string]any{"id": 2, "name": "two"}
+	records := []any{oneInt, oneString, two}
+
+	t.Run("where matches numeric strings and numbers", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Where(records, "id", 1.0)
+		require.NoError(t, err)
+		want := []any{oneInt, oneString}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Fatalf("Where() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("find index matches numeric strings and numbers", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := FindIndex(records, "id", "1.0")
+		require.NoError(t, err)
+		require.Equal(t, 0, got)
+	})
+
+	t.Run("has matches numeric strings and numbers", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Has(records, "id", "1")
+		require.NoError(t, err)
+		require.True(t, got)
+	})
+}
+
+func TestPredicateTruthiness(t *testing.T) {
+	t.Parallel()
+
+	truthyEmptyString := map[string]any{"name": "empty string", "value": ""}
+	truthyZero := map[string]any{"name": "zero", "value": 0}
+	truthyEmptySlice := map[string]any{"name": "empty slice", "value": []any{}}
+	truthyEmptyMap := map[string]any{"name": "empty map", "value": map[string]any{}}
+	falsyNil := map[string]any{"name": "nil", "value": nil}
+	falsyFalse := map[string]any{"name": "false", "value": false}
+	records := []map[string]any{
+		truthyEmptyString,
+		truthyZero,
+		truthyEmptySlice,
+		truthyEmptyMap,
+		falsyNil,
+		falsyFalse,
+	}
+	truthy := []any{truthyEmptyString, truthyZero, truthyEmptySlice, truthyEmptyMap}
+	falsy := []any{falsyNil, falsyFalse}
+
+	t.Run("where keeps every value except nil and false", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Where(records, "value")
+		require.NoError(t, err)
+		if diff := cmp.Diff(truthy, got); diff != "" {
+			t.Fatalf("Where() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("reject keeps nil and false", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Reject(records, "value")
+		require.NoError(t, err)
+		if diff := cmp.Diff(falsy, got); diff != "" {
+			t.Fatalf("Reject() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("has reports truthy value exists", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := Has(records, "value")
+		require.NoError(t, err)
+		require.True(t, got)
+	})
 }
 
 func TestReject(t *testing.T) {

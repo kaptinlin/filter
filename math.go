@@ -72,28 +72,28 @@ func Ceil(input any) (float64, error) {
 	return math.Ceil(v), nil
 }
 
-// Plus adds addend to input. Implements the Liquid `plus` filter.
+// Plus adds addend to input.
 func Plus(input, addend any) (float64, error) {
 	return binaryOp(input, addend, func(a, b float64) (float64, error) {
 		return a + b, nil
 	})
 }
 
-// Minus subtracts subtrahend from input. Implements the Liquid `minus` filter.
+// Minus subtracts subtrahend from input.
 func Minus(input, subtrahend any) (float64, error) {
 	return binaryOp(input, subtrahend, func(a, b float64) (float64, error) {
 		return a - b, nil
 	})
 }
 
-// Times multiplies input by multiplier. Implements the Liquid `times` filter.
+// Times multiplies input by multiplier.
 func Times(input, multiplier any) (float64, error) {
 	return binaryOp(input, multiplier, func(a, b float64) (float64, error) {
 		return a * b, nil
 	})
 }
 
-// Divide divides input by divisor. Implements the Liquid `divided_by` filter.
+// Divide divides input by divisor.
 // Returns *Error{Kind: KindArithmetic} when divisor is zero.
 func Divide(input, divisor any) (float64, error) {
 	return binaryOp(input, divisor, func(a, b float64) (float64, error) {

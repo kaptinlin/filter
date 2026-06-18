@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"cmp"
 	"errors"
 	"fmt"
 	"math/rand/v2"
@@ -49,10 +48,14 @@ func UniqueBy(input any, key string) ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(slice) == 0 {
+		return []any{}, nil
+	}
+	lookupKey := newLookupKey(key)
 	keys := make([]any, 0, len(slice))
 	out := make([]any, 0, len(slice))
 	for _, item := range slice {
-		v, err := Extract(item, key)
+		v, err := lookupRequired("UniqueBy", item, lookupKey)
 		if err != nil {
 			return nil, err
 		}
@@ -239,9 +242,13 @@ func SumBy(input any, key string) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+	if len(slice) == 0 {
+		return 0, nil
+	}
+	lookupKey := newLookupKey(key)
 	var sum float64
 	for _, item := range slice {
-		v, err := Extract(item, key)
+		v, err := lookupRequired("SumBy", item, lookupKey)
 		if err != nil {
 			return 0, err
 		}
@@ -296,21 +303,17 @@ func Min(input any) (float64, error) {
 }
 
 // Map returns the values at key from each item in input. Items where the key
-// is missing or unreachable contribute nil — this matches the Liquid
-// `map: 'name'` semantics where any missing path is nil, not an error.
+// is missing or unreachable contribute nil so the output preserves input
+// cardinality.
 func Map(input any, key string) ([]any, error) {
 	slice, err := toSlice(input)
 	if err != nil {
 		return nil, err
 	}
+	lookupKey := newLookupKey(key)
 	out := make([]any, 0, len(slice))
 	for _, item := range slice {
-		v, err := Extract(item, key)
-		if err != nil {
-			out = append(out, nil)
-			continue
-		}
-		out = append(out, v)
+		out = append(out, lookupOrNil(item, lookupKey))
 	}
 	return out, nil
 }
@@ -324,8 +327,9 @@ func Sort(input any, key ...string) ([]any, error) {
 		return nil, err
 	}
 	out := slices.Clone(slice)
+	lookupKey, hasKey := optionalLookupKey(key...)
 	slices.SortStableFunc(out, func(a, b any) int {
-		return compareValues(extractOrSelf(a, b, key...))
+		return compareValues(sortValues(a, b, lookupKey, hasKey))
 	})
 	return out, nil
 }
@@ -338,8 +342,9 @@ func SortNatural(input any, key ...string) ([]any, error) {
 		return nil, err
 	}
 	out := slices.Clone(slice)
+	lookupKey, hasKey := optionalLookupKey(key...)
 	slices.SortStableFunc(out, func(a, b any) int {
-		return compareValuesNatural(extractOrSelf(a, b, key...))
+		return compareValuesNatural(sortValues(a, b, lookupKey, hasKey))
 	})
 	return out, nil
 }
@@ -352,11 +357,12 @@ func Compact(input any, key ...string) ([]any, error) {
 		return nil, err
 	}
 	hasKey := len(key) > 0 && key[0] != ""
+	lookupKey, _ := optionalLookupKey(key...)
 	out := make([]any, 0, len(slice))
 	for _, item := range slice {
 		if hasKey {
-			v, err := Extract(item, key[0])
-			if err != nil || v == nil {
+			v, ok := lookupValue(item, lookupKey)
+			if !ok || v == nil {
 				continue
 			}
 		} else if item == nil {
@@ -377,9 +383,10 @@ func Where(input any, key string, value ...any) ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	lookupKey := newLookupKey(key)
 	out := make([]any, 0, len(slice))
 	for _, item := range slice {
-		if matchesCriteria(item, key, value...) {
+		if matchesCriteria(item, lookupKey, value...) {
 			out = append(out, item)
 		}
 	}
@@ -393,9 +400,10 @@ func Reject(input any, key string, value ...any) ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	lookupKey := newLookupKey(key)
 	out := make([]any, 0, len(slice))
 	for _, item := range slice {
-		if !matchesCriteria(item, key, value...) {
+		if !matchesCriteria(item, lookupKey, value...) {
 			out = append(out, item)
 		}
 	}
@@ -409,9 +417,10 @@ func Find(input any, key string, value any) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	lookupKey := newLookupKey(key)
 	for _, item := range slice {
-		v, err := Extract(item, key)
-		if err != nil {
+		v, ok := lookupValue(item, lookupKey)
+		if !ok {
 			continue
 		}
 		if valuesEqual(v, value) {
@@ -427,9 +436,10 @@ func FindIndex(input any, key string, value any) (int, error) {
 	if err != nil {
 		return -1, err
 	}
+	lookupKey := newLookupKey(key)
 	return slices.IndexFunc(slice, func(item any) bool {
-		v, err := Extract(item, key)
-		return err == nil && valuesEqual(v, value)
+		v, ok := lookupValue(item, lookupKey)
+		return ok && valuesEqual(v, value)
 	}), nil
 }
 
@@ -441,8 +451,9 @@ func Has(input any, key string, value ...any) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	lookupKey := newLookupKey(key)
 	return slices.ContainsFunc(slice, func(item any) bool {
-		return matchesCriteria(item, key, value...)
+		return matchesCriteria(item, lookupKey, value...)
 	}), nil
 }
 
@@ -450,9 +461,9 @@ func Has(input any, key string, value ...any) (bool, error) {
 // present this is equality; with value omitted it is truthiness (nil and
 // boolean false are falsy; everything else is truthy — including empty
 // strings). Unreachable keys never match.
-func matchesCriteria(item any, key string, value ...any) bool {
-	v, err := Extract(item, key)
-	if err != nil {
+func matchesCriteria(item any, key lookupKey, value ...any) bool {
+	v, ok := lookupValue(item, key)
+	if !ok {
 		return false
 	}
 	if len(value) > 0 {
@@ -461,85 +472,64 @@ func matchesCriteria(item any, key string, value ...any) bool {
 	return isTruthy(v)
 }
 
-// isTruthy returns false for nil and bool(false); true for everything else.
-// This is the Liquid-inspired truthy definition used by predicate filters.
-func isTruthy(v any) bool {
-	if v == nil {
-		return false
-	}
-	if b, ok := v.(bool); ok {
-		return b
-	}
-	return true
+type lookupKey struct {
+	raw  string
+	path path
+	err  error
 }
 
-// extractOrSelf extracts values at key, or returns the values unchanged when
-// key is empty.
-func extractOrSelf(a, b any, key ...string) (any, any) {
-	if len(key) > 0 && key[0] != "" {
-		va, errA := Extract(a, key[0])
-		vb, errB := Extract(b, key[0])
-		if errA != nil {
-			va = nil
-		}
-		if errB != nil {
-			vb = nil
-		}
-		return va, vb
-	}
-	return a, b
+func newLookupKey(raw string) lookupKey {
+	path, err := parsePath(raw)
+	return lookupKey{raw: raw, path: path, err: err}
 }
 
-// compareValues sorts numbers numerically, everything else as strings.
-func compareValues(a, b any) int {
-	return compareValuesBy(a, b, func(s string) string { return s })
+func optionalLookupKey(key ...string) (lookupKey, bool) {
+	if len(key) == 0 || key[0] == "" {
+		return lookupKey{}, false
+	}
+	return newLookupKey(key[0]), true
 }
 
-// compareValuesNatural compares case-insensitively after numeric coercion.
-func compareValuesNatural(a, b any) int {
-	return compareValuesBy(a, b, strings.ToLower)
+func (key lookupKey) lookup(item any) lookupResult {
+	if key.err != nil {
+		return invalidLookup(key.err)
+	}
+	return lookupPath(item, key.path)
 }
 
-func compareValuesBy(a, b any, normalize func(string) string) int {
-	switch {
-	case a == nil && b == nil:
-		return 0
-	case a == nil:
-		return -1
-	case b == nil:
-		return 1
+func (key lookupKey) lookupError(op string, result lookupResult) error {
+	if key.err != nil {
+		return invalidInputAt(op, key.raw, key.err)
 	}
-	fa, errA := toFloat64(a)
-	fb, errB := toFloat64(b)
-	if errA == nil && errB == nil {
-		return cmp.Compare(fa, fb)
-	}
-	return cmp.Compare(normalize(fmt.Sprint(a)), normalize(fmt.Sprint(b)))
+	return result.err(op, key.path)
 }
 
-// valuesEqual checks equality with cross-type numeric coercion.
-func valuesEqual(a, b any) bool {
-	if a == nil && b == nil {
-		return true
+func lookupRequired(op string, item any, key lookupKey) (any, error) {
+	result := key.lookup(item)
+	if result.found() {
+		return result.value, nil
 	}
-	if a == nil || b == nil {
-		return false
-	}
-	if reflect.TypeOf(a).Comparable() && reflect.TypeOf(b).Comparable() && a == b {
-		return true
-	}
-	fa, errA := toFloat64(a)
-	fb, errB := toFloat64(b)
-	if errA == nil && errB == nil {
-		return fa == fb
-	}
-	return reflect.DeepEqual(a, b)
+	return nil, key.lookupError(op, result)
 }
 
-func containsValue(values []any, target any) bool {
-	return slices.ContainsFunc(values, func(v any) bool {
-		return valuesEqual(v, target)
-	})
+func lookupValue(item any, key lookupKey) (any, bool) {
+	result := key.lookup(item)
+	if result.found() {
+		return result.value, true
+	}
+	return nil, false
+}
+
+func lookupOrNil(item any, key lookupKey) any {
+	v, _ := lookupValue(item, key)
+	return v
+}
+
+func sortValues(a, b any, key lookupKey, hasKey bool) (any, any) {
+	if !hasKey {
+		return a, b
+	}
+	return lookupOrNil(a, key), lookupOrNil(b, key)
 }
 
 func numericExtractError(op string, err error) error {

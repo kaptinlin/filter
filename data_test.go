@@ -974,6 +974,74 @@ func TestExtractErrorHandling(t *testing.T) {
 		PointerField: &NestedStruct{Value: 200},
 	}
 
+	t.Run("ErrorPathDiagnostics", func(t *testing.T) {
+		t.Parallel()
+
+		testDataWithNil := TestStruct{
+			IntField:     42,
+			StringField:  "hello",
+			PointerField: nil,
+		}
+
+		tests := []struct {
+			name    string
+			input   any
+			key     string
+			wantErr error
+		}{
+			{
+				name:    "invalid slice index keeps full path",
+				input:   testData,
+				key:     "slice_field.invalid",
+				wantErr: ErrInvalidInput,
+			},
+			{
+				name:    "scalar traversal keeps full path",
+				input:   testData,
+				key:     "int_field.nested.deep",
+				wantErr: ErrInvalidInput,
+			},
+			{
+				name:    "nil pointer traversal keeps full path",
+				input:   testDataWithNil,
+				key:     "pointer_field.value",
+				wantErr: ErrInvalidInput,
+			},
+			{
+				name:    "missing map key keeps full path",
+				input:   testData,
+				key:     "map_field.nonexistent",
+				wantErr: ErrNotFound,
+			},
+			{
+				name:    "dangling escape keeps full path",
+				input:   testData,
+				key:     "nested_field.value\\",
+				wantErr: ErrInvalidInput,
+			},
+			{
+				name:    "unsupported escape keeps full path",
+				input:   testData,
+				key:     "nested_field.value\\q",
+				wantErr: ErrInvalidInput,
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+
+				_, err := Extract(tt.input, tt.key)
+				require.Error(t, err)
+				require.ErrorIs(t, err, tt.wantErr)
+
+				var filterErr *Error
+				require.ErrorAs(t, err, &filterErr)
+				require.Equal(t, tt.key, filterErr.Path)
+			})
+		}
+	})
+
 	t.Run("ErrInvalidIndex", func(t *testing.T) {
 		t.Parallel()
 

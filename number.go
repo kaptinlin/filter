@@ -45,7 +45,7 @@ func Number(input any, format string) (string, error) {
 // non-finite, and overflowing inputs return *Error{Kind: KindInvalidInput}.
 //
 // For binary (KiB / MiB) units, callers can compose humanize.BinaryBytes
-// themselves; the SI form is what Liquid templates expect.
+// themselves; this helper owns only the SI form.
 func Bytes(input any) (string, error) {
 	v, err := toInt64Exact("Bytes", input)
 	if err != nil {

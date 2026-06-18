@@ -20,9 +20,8 @@
 //
 // # Stability
 //
-// Stable semantics include UTF-8 length, UTC default timezone, Liquid truthy
-// definition, Find returning *Error{Kind:KindNotFound} on miss, the
-// PHP/carbon-compatible format-token set used by Date, and Map silently
-// substituting nil for
-// missing keys. See CONTRACT.md for the compact public contract.
+// Stable semantics include UTF-8 length, UTC default timezone, nil/false-only
+// falsiness, Find returning *Error{Kind:KindNotFound} on miss, Date's token
+// grammar, and Map silently substituting nil for missing keys. See
+// SPECS/00-runtime-contract.md for the durable runtime contract.
 package filter

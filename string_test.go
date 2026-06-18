@@ -806,6 +806,8 @@ func TestDefault(t *testing.T) {
 		{"false falls back", false, "fallback", "fallback"},
 		{"empty string is truthy", "", "fallback", ""},
 		{"zero int is truthy", 0, "fallback", 0},
+		{"empty slice is truthy", []any{}, "fallback", []any{}},
+		{"empty map is truthy", map[string]any{}, "fallback", map[string]any{}},
 		{"non-empty string", "value", "fallback", "value"},
 		{"true keeps input", true, "fallback", true},
 	}
