@@ -152,7 +152,7 @@ fmt.Println(weekday) // Outputs: Saturday
 
 ### TimeAgo
 
-Returns a human-readable string representing the time difference between the current wall time and the input date. Use `filter.TimeAgoWithClock(filter.FixedClock{T: ...}, input)` when tests need a deterministic reference point. A nil clock passed to `TimeAgoWithClock` returns an error.
+Returns a human-readable string representing the past or future time difference between the current wall time and the input date. Past inputs render `... ago`; future inputs render `in ...`. Use `filter.TimeAgoWithClock(filter.FixedClock{T: ...}, input)` when tests need a deterministic reference point. A nil clock passed to `TimeAgoWithClock` returns an error.
 
 **Example:**
 

@@ -142,7 +142,7 @@ in [SPECS/00-runtime-contract.md](SPECS/00-runtime-contract.md).
 | [`Year`](docs/date.md#year)                                          | Extracts and returns the year from a date.                                         |
 | [`Week`](docs/date.md#week)                                          | Returns the ISO week number of a date.                                             |
 | [`Weekday`](docs/date.md#weekday)                                    | Determines the day of the week from a date.                                        |
-| [`TimeAgo`](docs/date.md#timeago)                                    | Provides a human-readable string representing the time difference to the present.  |
+| [`TimeAgo`](docs/date.md#timeago)                                    | Formats a past or future relative time difference from now.                       |
 
 
 ## Number Functions

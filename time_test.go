@@ -264,6 +264,18 @@ func TestTimeAgo(t *testing.T) {
 	require.Equal(t, "1 hour ago", got)
 }
 
+func TestTimeAgoFuture(t *testing.T) {
+	t.Parallel()
+
+	ref := time.Date(2024, time.March, 30, 16, 0, 0, 0, time.UTC)
+	clock := FixedClock{T: ref}
+	target := time.Date(2024, time.March, 30, 17, 0, 0, 0, time.UTC)
+
+	got, err := TimeAgoWithClock(clock, target)
+	require.NoError(t, err)
+	require.Equal(t, "in 1 hour", got)
+}
+
 func TestTimeAgoRejectsNilClock(t *testing.T) {
 	t.Parallel()
 	_, err := TimeAgoWithClock(nil, fixedDate)
